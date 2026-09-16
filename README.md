@@ -1,6 +1,6 @@
 # Open Now — Headless MCP for ServiceNow
 
-Open Now is a headless MCP interface for ServiceNow: a small, stable four-tool MCP kernel, a curated skill catalog that encodes how real work is done (ITSM/CMDB/ITOM/SPM/CSM/HRSD/SecOps/platform), and an in-instance runtime (`sn_headless` scoped app) that keeps every read and write inside ServiceNow's ACL, Business Rule, and Data Policy fabric.
+Open Now is a headless MCP interface for ServiceNow: a small, stable MCP kernel, a curated skill catalog that encodes how real work is done (ITSM/CMDB/ITOM/SPM/CSM/HRSD/SecOps/platform), a generated toolkit for metadata-driven table/record/script access, and an in-instance runtime (`sn_headless` scoped app) that keeps every read and write inside ServiceNow's ACL, Business Rule, and Data Policy fabric.
 
 **The invariant:** the AI client orchestrates; ServiceNow remains the governed system of action. The kernel is protocol only — all capability, permission, and audit logic runs in the instance as the invoking user. No Table API in the kernel, no service account on the interactive path.
 
@@ -16,7 +16,7 @@ flowchart LR
         C1[discover / describe / dispatch_readonly / dispatch]
     end
     subgraph Kernel["open-now mcp-server (Bun/TS)"]
-        T[4 kernel tools + confirm policy + OAuth PKCE session]
+        T[4 stable kernel tools + toolkit + confirm policy + OAuth PKCE session]
     end
     subgraph Instance["ServiceNow instance"]
         REST[Scripted REST sn_headless]
@@ -83,7 +83,9 @@ bun run eval -- --gateway mock   # 9 golden steps, no instance required
 
 ## Using the tools
 
-The tool surface is intentionally four tools (spec §3.3). The action surface grows behind them — not in the model context.
+The kernel tool surface is intentionally four stable tools (spec §3.3); the action surface grows behind them — via the 32-skill catalog and the generated toolkit (see below) — so the model context never has to absorb hundreds of tool descriptions.
+
+**Default surface: 4 kernel tools + 32 curated skills + 10 generated toolkit tools.** In table mode (`OPEN_NOW_TOOLKIT=table`) the toolkit expands to ~125 per-table tools; everything still routes through one instance-side trust boundary.
 
 | Tool | Purpose |
 |---|---|
