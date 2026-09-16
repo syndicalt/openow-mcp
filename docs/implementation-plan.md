@@ -1,8 +1,8 @@
 # Open Now — Implementation Plan
 
 **Status:** v1.0 · draft for approval
-**Source spec:** `README.md` (Headless Now v1.0, 16 Sep 2026) — read in full; note it contains the document twice (duplicate begins ~line 3522; dedupe is a housekeeping task in P0).
-**Scope:** Build Open Now (Headless Now) as an OSS headless MCP interface for ServiceNow, per the README architecture and skill catalog.
+**Source spec:** `docs/spec.md` (Headless Now v1.0, 16 Sep 2026 — deduped to a single copy during build).
+**Scope:** Build Open Now (Headless Now) as an OSS headless MCP interface for ServiceNow, per the `docs/spec.md` architecture and skill catalog.
 
 ---
 
@@ -27,8 +27,8 @@
 
 ```
 open-now/
-├── README.md                        # spec (dedupe in P0)
-├── docs/
+├── README.md                        # usage doc (this repo's entry point)
+├── docs/                            # spec.md (design), wire-contract.md, evaluation.md, implementation-plan.md
 │   ├── implementation-plan.md       # this file
 │   └── wire-contract.md             # generated API/types reference
 ├── packages/
