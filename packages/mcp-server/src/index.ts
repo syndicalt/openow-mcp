@@ -4,6 +4,7 @@ export * from "./gateway/instance.js";
 export * from "./gateway/mock.js";
 export * from "./kernel/kernel.js";
 export * from "./kernel/tools.js";
+export * from "./kernel/toolkit.js";
 export * from "./auth/oauth.js";
 export * from "./auth/session-store.js";
 export * from "./auth/well-known.js";

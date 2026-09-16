@@ -123,6 +123,32 @@ dispatch("sn.itsm.incident.update", { inputs: {...}, confirm: true, requestId: "
 
 `dispatch` on `raw:incident` (`{ table, query, fields, limit }`) is the builder escape hatch behind `QueryGuard` (allowlisted operators, capped windows, field allowlists, no `JS:`/`GOTO`). It always shows as a discover candidate but is never the default path for operators.
 
+### Toolkit — the generated wide surface
+
+Beyond the 32 skills, a **generated toolkit** covers any table without hand-written glue — all still executed in the instance through `QueryGuard`/`RecordResolver`/`ConfirmGate`/audit. No Table API in the kernel, no service account, ever.
+
+**Generic mode (default, `OPEN_NOW_TOOLKIT=generic`)** — 10 tools, context-safe, metadata-driven:
+
+| Tool | Behavior |
+|---|---|
+| `table_list` / `table_schema` | metadata from `sys_db_object`/`sys_dictionary` |
+| `record_get` | one record by number or sys_id (role-gated on HR/SecOps tables) |
+| `record_create` / `record_update` / `record_delete` | draft/diff first → `confirm:true` + same `requestId` applies exactly once; **deletes are restricted** (never silent) |
+| `aggregate_report` | server-side COUNT/AVG/MIN/MAX/SUM, optional groupBy — no row dumps |
+| `run_script` | short server-side Glide script, eval'd in the scoped runtime |
+| `attachment_list` / `attachment_add` | attachments per record (base64, draft-then-confirm) |
+
+**Table mode (`OPEN_NOW_TOOLKIT=table`)** — NowAIKit-style breadth: `tbl_<table>_{query,get,create,update,delete}` generated per table from `OPEN_NOW_TABLE_TOOLS` (comma list; default is a core ~25-table allowlist → ~125 tools). Everything routes to the same runtime — one audit model, same confirm semantics. Set `OPEN_NOW_TABLE_TOOLS=` to disable, or list exactly the tables you want.
+
+```text
+table_schema({ table: "incident" })        → fields from sys_dictionary
+record_update({ table: "incident", number: "INC0010001", values: { state: "2" } })
+  → pending (field diff) → confirm:true + same requestId → applied (exactly once)
+record_delete({ table: "incident", number: "INC0010001" })
+  → pending ("Deletes require confirmation") → confirm:true → deleted
+run_script({ script: "new GlideRecord('incident').getRowCount()" }) → result
+```
+
 ---
 
 ## Skill catalog
@@ -153,6 +179,8 @@ All settings via environment (defaults in parentheses) or `--config file.json` (
 | `OPEN_NOW_DOMAIN` | Domain mode: expose only `sn.<domain>.*` skills as `<domain>_<slug>` tools (e.g. `itsm`) |
 | `OPEN_NOW_REQUIRE_DESCRIBE` | Hard-require describe before any dispatch |
 | `OPEN_NOW_ENABLED_SKILLS` | Comma-separated allowlist |
+| `OPEN_NOW_TOOLKIT` | Generated wide surface: `generic` (default) \| `table` \| `off` |
+| `OPEN_NOW_TABLE_TOOLS` | Comma-separated table allowlist for table mode (empty = none; unset = core allowlist) |
 
 **Pause switch:** each registry row has an `active` flag — a single flip pauses a skill sans deploy.
 

@@ -8,6 +8,8 @@ import type {
   InvokeResponse,
   RawRequest,
   SkillDoc,
+  ToolkitRequest,
+  ToolkitResponse,
 } from "@open-now/contracts";
 import { isWriteClass } from "@open-now/contracts";
 import { type SnowGateway } from "./gateway.js";
@@ -25,6 +27,15 @@ export interface MockGatewayOptions {
   focused?: Record<string, FocusedPayload>;
   discover?: DiscoverItem[];
   raw?: FocusedPayload;
+  /** toolkit fixtures */
+  tables?: Array<{ name: string; label: string; extends?: string }>;
+  schema?: Record<string, Array<Record<string, unknown>>>;
+  rows?: Record<string, Array<Record<string, unknown>>>;
+  aggregates?: Array<Record<string, unknown>>;
+}
+
+function str(args: Record<string, unknown>): string {
+  return String(args.sys_id ?? args.number ?? args.record ?? "");
 }
 
 const DEFAULT_FOCUSED: FocusedPayload = { rows: [], count: 0 };
@@ -45,12 +56,22 @@ export class MockGateway implements SnowGateway {
   private readonly focused: Record<string, FocusedPayload>;
   private readonly discoverItems: DiscoverItem[];
   private readonly rawFixture: FocusedPayload;
+  private readonly tableFixture: Array<{ name: string; label: string; extends?: string }>;
+  private readonly schemaFixture: Record<string, Array<Record<string, unknown>>>;
+  private readonly rowsFixture: Record<string, Array<Record<string, unknown>>>;
+  private readonly aggregatesFixture: Array<Record<string, unknown>>;
+  private readonly restrictedTables = ["hr_case", "sn_si_incident", "sn_vuln_vulnerable_item"];
+  private readonly restrictedRoles = ["sn_hr_core.case_writer", "sn_si.analyst", "sn_vuln"];
 
   constructor(opts: MockGatewayOptions = {}) {
     this.skills = opts.skills ?? {};
     this.focused = opts.focused ?? {};
     this.discoverItems = opts.discover ?? [];
     this.rawFixture = opts.raw ?? DEFAULT_FOCUSED;
+    this.tableFixture = opts.tables ?? [];
+    this.schemaFixture = opts.schema ?? {};
+    this.rowsFixture = opts.rows ?? {};
+    this.aggregatesFixture = opts.aggregates ?? [];
     this.user = opts.user ?? { sys_id: "u_me", name: "Ada", roles: ["itil"] };
   }
 
@@ -160,11 +181,163 @@ export class MockGateway implements SnowGateway {
   }
 
   async raw(req: RawRequest): Promise<FocusedPayload> {
+    const fixtureRows = (this.rawFixture.rows as Array<Record<string, unknown>> | undefined) ?? [];
+    const rows = (this.rowsFixture[req.table] ?? fixtureRows).slice(0, req.limit);
     return {
       ...this.rawFixture,
+      rows,
+      count: rows.length,
       table: req.table,
       limit: req.limit,
     };
+  }
+
+  async toolkit(req: ToolkitRequest): Promise<ToolkitResponse> {
+    const key = req.requestId ?? `${req.op}:${JSON.stringify(req.args)}:${req.confirm}`;
+    const stored = this.applied.get(key);
+    // A stored pending must NOT block a confirm attempt (mirrors instance Audit
+    // semantics: settled outcomes replay, pending never short-circuits a write).
+    if (stored && (stored.outcome !== "pending" || !req.confirm)) return stored;
+    const res = await this.toolkitOnce(req);
+    this.applied.set(key, res);
+    return res;
+  }
+
+  private async toolkitOnce(req: ToolkitRequest): Promise<ToolkitResponse> {
+    this.invokeCount++;
+    const { op, args } = req;
+    const auditId = `audit-mock-tk-${this.invokeCount}`;
+    const table = String(args.table ?? "");
+    if (this.restrictedTables.includes(table)) {
+      const okRole = this.user.roles.some((r) => this.restrictedRoles.includes(r));
+      if (!okRole) {
+        this.deniedCount++;
+        return {
+          outcome: "denied",
+          confirmation: "read",
+          auditId,
+          message: `Requires role for raw access to ${table}`,
+        };
+      }
+    }
+
+    switch (op) {
+      case "table_list":
+        return {
+          outcome: "ok",
+          confirmation: "read",
+          auditId,
+          focusedPayload: { count: this.tableFixture.length, tables: this.tableFixture },
+        };
+      case "table_schema":
+        return {
+          outcome: "ok",
+          confirmation: "read",
+          auditId,
+          focusedPayload: { table, fields: this.schemaFixture[table] ?? [] },
+        };
+      case "record_get": {
+        const record = this.findRow(table, args);
+        if (!record) {
+          return { outcome: "error", confirmation: "read", auditId, message: `${table} ${str(args)} not found or not readable` };
+        }
+        return { outcome: "ok", confirmation: "read", auditId, focusedPayload: { table, record } };
+      }
+      case "aggregate_report":
+        return {
+          outcome: "ok",
+          confirmation: "read",
+          auditId,
+          focusedPayload: { aggregates: this.aggregatesFixture },
+        };
+      case "run_script":
+        return {
+          outcome: "ok",
+          confirmation: "read",
+          auditId,
+          focusedPayload: { result: `mock: ${String(args.script ?? "").slice(0, 80)}` },
+        };
+      case "attachment_list":
+        return {
+          outcome: "ok",
+          confirmation: "read",
+          auditId,
+          focusedPayload: { table, attachments: [] },
+        };
+      case "record_create":
+      case "attachment_add":
+        if (!req.confirm) {
+          return {
+            outcome: "pending",
+            confirmation: "create",
+            auditId,
+            draft: { summary: `Create ${table}`, fields: (args.values ?? args) as Record<string, unknown> },
+          };
+        }
+        this.applyCount++;
+        return {
+          outcome: "applied",
+          confirmation: "create",
+          auditId,
+          focusedPayload: {
+            table,
+            record: String(args.file_name ?? (args.values as Record<string, unknown>)?.number ?? "GEN0001001"),
+          },
+        };
+      case "record_update":
+        if (!req.confirm) {
+          const values = (args.values ?? {}) as Record<string, unknown>;
+          const row = this.findRow(table, args);
+          return {
+            outcome: "pending",
+            confirmation: "update_shared",
+            auditId,
+            diff: Object.entries(values).map(([field, after]) => ({
+              field,
+              before: row && field in row ? (row[field] as unknown) : null,
+              after,
+            })),
+            focusedPayload: { table, record: String(args.number ?? args.sys_id ?? "") },
+          };
+        }
+        this.applyCount++;
+        return {
+          outcome: "applied",
+          confirmation: "update_shared",
+          auditId,
+          focusedPayload: { table, record: String(args.number ?? args.sys_id ?? "") },
+        };
+      case "record_delete":
+        if (!req.confirm) {
+          return {
+            outcome: "pending",
+            confirmation: "restricted",
+            auditId,
+            draft: { summary: `Delete ${table} ${str(args)}`, fields: {} },
+          };
+        }
+        this.applyCount++;
+        return {
+          outcome: "applied",
+          confirmation: "restricted",
+          auditId,
+          focusedPayload: { table, record: str(args), deleted: true },
+        };
+      default:
+        return {
+          outcome: "unsupported",
+          confirmation: "read",
+          auditId,
+          message: `unknown toolkit op ${op}`,
+        };
+    }
+  }
+
+  private findRow(table: string, args: Record<string, unknown>): Record<string, unknown> | undefined {
+    const rows = this.rowsFixture[table] ?? [];
+    const key = String(args.sys_id ?? args.number ?? args.record ?? "");
+    if (!key) return rows[0];
+    return rows.find((r) => String(r.sys_id ?? "") === key || String(r.number ?? r.sys_id ?? "") === key);
   }
 
   async getRun(requestId: string): Promise<AuditRun> {

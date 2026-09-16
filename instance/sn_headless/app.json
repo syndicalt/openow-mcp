@@ -1,7 +1,7 @@
 {
   "name": "sn_headless",
   "scope": "sn_headless",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Open Now headless runtime: skill registry, audit, discover index, and the trusted execution surface for ServiceNow skills.",
   "tables": [
     {
@@ -93,6 +93,7 @@
     { "name": "invoke", "httpMethod": "POST", "path": "skills/{skillId}/invoke", "scriptFile": "rest/invoke.js" },
     { "name": "raw", "httpMethod": "POST", "path": "raw", "scriptFile": "rest/raw.js" },
     { "name": "run", "httpMethod": "GET", "path": "runs/{requestId}", "scriptFile": "rest/run.js" },
-    { "name": "import", "httpMethod": "POST", "path": "import", "scriptFile": "rest/import.js" }
+    { "name": "import", "httpMethod": "POST", "path": "import", "scriptFile": "rest/import.js" },
+    { "name": "toolkit", "httpMethod": "POST", "path": "toolkit", "scriptFile": "rest/toolkit.js" }
   ]
 }

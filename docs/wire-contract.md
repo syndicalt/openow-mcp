@@ -165,3 +165,32 @@ the denial in-band and stop — never impersonate another user or bypass ACLs.
 | `execute` | Run a Flow, execute a scripted action, kick Discovery | Describe side effects. Wait for yes. |
 | `deploy` | Commit update set, publish Flow, modify ACL | Sandbox-first. Production requires a second person or change request link. |
 | `restricted` | HR, SecOps, Legal, any delete | Skill available only if role present. Always confirm. Default deny on delete. |
+
+## 7. Toolkit surface (generated wide surface, instance §3.4/§8.3)
+
+### 7.1 Endpoint
+
+| Method | Path | Purpose | Body | Response |
+|---|---|---|---|---|
+| POST | `/api/now/sn_headless/toolkit` | Metadata-driven table/record/script/attachment operations | `ToolkitRequest` — `{ op, args?, clientApp?, requestId?, dryRun?, confirm? }` | `InvokeResponse` envelope — same as skill invokes: `{ outcome: ok\|pending\|applied\|denied\|error\|unsupported, confirmation, diff?, draft?, focusedPayload, auditId, message? }` |
+
+### 7.2 Operations
+
+| Op | Args | Confirmation | Behavior |
+|---|---|---|---|
+| `table_list` | `{ pattern?, limit? }` | read | Metadata list from `sys_db_object` |
+| `table_schema` | `{ table }` | read | Fields from `sys_dictionary` (name/label/type/reference/read-only) |
+| `record_get` | `{ table, sys_id\|number\|record }` | read | One record; role-gated on HR/SecOps tables |
+| `record_create` | `{ table, values }` | create | Draft first; insert on confirm |
+| `record_update` | `{ table, sys_id\|number\|record, values }` | update_shared | Field diff first; update on confirm |
+| `record_delete` | `{ table, sys_id\|number\|record }` | restricted | Always confirm — default deny on delete |
+| `aggregate_report` | `{ table, aggregate, field?, groupBy?, query? }` | read | Server-side COUNT/AVG/MIN/MAX/SUM via GlideAggregate |
+| `run_script` | `{ script }` | read | eval in the scoped runtime; result string (capped 4000 chars) |
+| `attachment_list` | `{ table, sys_id\|number\|record }` | read | `sys_attachment` rows for the record |
+| `attachment_add` | `{ table, sys_id\|number\|record, file_name, content_type?, content? }` | create | Draft then attach (base64 content) |
+
+### 7.3 Kernel exposure
+
+- Generic mode (default): 10 tools named after the ops (`table_list`, `record_get`, `record_create`, `record_update`, `record_delete`, `aggregate_report`, `run_script`, `attachment_list`, `attachment_add`, `table_schema`). Writes return `pending` unless `confirm: true` with the same `requestId`; applied once, then replayed idempotently.
+- Table mode (`OPEN_NOW_TOOLKIT=table`): generated `tbl_<table>_{query,get,create,update,delete}` per allowlisted table; `tbl_<table>_query` routes through `raw` (QueryGuard), the rest through the corresponding toolkit ops with `table` fixed.
+- All toolkit tools are protocol-only: every op executes in the instance with QueryGuard/ConfirmGate/audit; a `denied` (restricted table without role) is fail-closed.

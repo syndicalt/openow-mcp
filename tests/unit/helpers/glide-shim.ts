@@ -20,6 +20,7 @@ export interface ShimState {
   user: ShimUser;
   insertLog: Array<{ table: string; record: Record<string, unknown> }>;
   updateLog: Array<{ table: string; sys_id: string }>;
+  deleteLog: Array<{ table: string; sys_id: string }>;
   queryLog: string[];
 }
 
@@ -51,6 +52,7 @@ export function installShim(opts: ShimOptions = {}): ShimState {
     user,
     insertLog: [],
     updateLog: [],
+    deleteLog: [],
     queryLog: [],
   };
 
@@ -227,6 +229,16 @@ export function installShim(opts: ShimOptions = {}): ShimState {
 
     deleteMultiple(): void {
       tables.set(this.tableName, []);
+    }
+
+    deleteRecord(): boolean {
+      const row = this.buffer ?? this.rows[this.idx];
+      if (!row) return false;
+      const rows = tables.get(this.tableName) ?? [];
+      const idx = rows.findIndex((r) => r._sys_id === row._sys_id);
+      if (idx >= 0) rows.splice(idx, 1);
+      state.deleteLog.push({ table: this.tableName, sys_id: String(row._sys_id) });
+      return true;
     }
 
     getUniqueValue(): string {

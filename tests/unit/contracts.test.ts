@@ -1,7 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import {
   SkillDocSchema,
+  ToolkitRequestSchema,
+  ToolkitResponseSchema,
   hashInputs,
+  isToolkitWrite,
   isWriteClass,
   type SkillDoc,
 } from "@open-now/contracts";
@@ -86,5 +89,39 @@ describe("audit input hashing", () => {
     expect(hashInputs({ incident_number: "INC0010001" })).toBe(
       hashInputs({ incident_number: "INC0010001" }),
     );
+  });
+});
+
+describe("toolkit contract", () => {
+  test("parses a toolkit request with defaults", () => {
+    const req = ToolkitRequestSchema.parse({ op: "record_get", args: { table: "incident" } });
+    expect(req.dryRun).toBe(false);
+    expect(req.confirm).toBe(false);
+    expect(req.clientApp).toBe("open-now");
+  });
+
+  test("rejects unknown ops", () => {
+    expect(() => ToolkitRequestSchema.parse({ op: "nope" })).toThrow();
+  });
+
+  test("write class mapping per op", () => {
+    expect(isToolkitWrite("record_get")).toBe(false);
+    expect(isToolkitWrite("table_list")).toBe(false);
+    expect(isToolkitWrite("run_script")).toBe(false);
+    expect(isToolkitWrite("record_create")).toBe(true);
+    expect(isToolkitWrite("record_update")).toBe(true);
+    expect(isToolkitWrite("record_delete")).toBe(true);
+    expect(isToolkitWrite("attachment_add")).toBe(true);
+  });
+
+  test("pending response envelope matches invoke contract", () => {
+    const res = ToolkitResponseSchema.parse({
+      outcome: "pending",
+      confirmation: "update_shared",
+      auditId: "audit-1",
+      diff: [{ field: "state", before: "1", after: "2" }],
+    });
+    expect(res.outcome).toBe("pending");
+    expect(res.diff?.[0]?.field).toBe("state");
   });
 });

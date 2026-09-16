@@ -43,6 +43,7 @@ export async function main(): Promise<number> {
       config: { ...config, domain },
       sessionStore: store,
       docs: allSkillDocs,
+      toolkit: config.toolkit,
     });
     console.log(`open-now MCP listening on ${server.url}/mcp (sign in at ${server.url}/oauth/authorize)`);
     return 0;
@@ -59,8 +60,10 @@ export async function main(): Promise<number> {
     name: "open-now",
     version: "0.1.0",
     kernel,
+    gateway,
     domain,
     docs: allSkillDocs,
+    toolkit: config.toolkit,
   });
   const transport = new StdioServerTransport();
   await server.connect(transport);

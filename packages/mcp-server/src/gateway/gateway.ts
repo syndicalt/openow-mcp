@@ -6,6 +6,8 @@ import type {
   InvokeRequest,
   InvokeResponse,
   RawRequest,
+  ToolkitRequest,
+  ToolkitResponse,
 } from "@open-now/contracts";
 
 /**
@@ -18,6 +20,7 @@ export interface SnowGateway {
   describe(skillId: string): Promise<DescribePayload>;
   invoke(req: InvokeRequest): Promise<InvokeResponse>;
   raw(req: RawRequest): Promise<FocusedPayload>;
+  toolkit?(req: ToolkitRequest): Promise<ToolkitResponse>;
   getRun?(requestId: string): Promise<AuditRun | undefined>;
   close?(): Promise<void>;
 }

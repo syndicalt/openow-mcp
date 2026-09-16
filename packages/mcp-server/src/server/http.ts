@@ -12,7 +12,7 @@ import { InstanceGateway, type InstanceGatewayOptions } from "../gateway/instanc
 import type { SnowGateway } from "../gateway/gateway.js";
 import type { Kernel } from "../kernel/kernel.js";
 import { createKernel } from "../kernel/kernel.js";
-import { createMcpServer } from "./mcp.js";
+import { createMcpServer, type ToolkitOptions } from "./mcp.js";
 
 export interface HttpServerOptions {
   config: OpenNowConfig;
@@ -23,6 +23,7 @@ export interface HttpServerOptions {
   oauth?: OAuthClient;
   sessionStore?: SessionStore;
   docs?: import("@open-now/contracts").SkillDoc[];
+  toolkit?: ToolkitOptions;
 }
 
 /** The subset of Bun.serve's handle this module uses (port + graceful stop). */
@@ -88,8 +89,10 @@ export function createHttpServer(
       name: "open-now",
       version: "0.1.0",
       kernel,
+      gateway,
       domain: config.domain,
       docs: opts.docs,
+      toolkit: opts.toolkit,
     });
     void server.connect(transport);
     transport.onclose = () => sessions.delete(sessionId);

@@ -6,6 +6,8 @@ import type {
   InvokeRequest,
   InvokeResponse,
   RawRequest,
+  ToolkitRequest,
+  ToolkitResponse,
 } from "@open-now/contracts";
 import { GatewayError, type SnowGateway } from "./gateway.js";
 
@@ -47,6 +49,13 @@ export class InstanceGateway implements SnowGateway {
 
   async raw(req: RawRequest): Promise<FocusedPayload> {
     return this.call<FocusedPayload>(`${BASE_PATH}/raw`, {
+      method: "POST",
+      body: JSON.stringify(req),
+    });
+  }
+
+  async toolkit(req: ToolkitRequest): Promise<ToolkitResponse> {
+    return this.call<ToolkitResponse>(`${BASE_PATH}/toolkit`, {
       method: "POST",
       body: JSON.stringify(req),
     });

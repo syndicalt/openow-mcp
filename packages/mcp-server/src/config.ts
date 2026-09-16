@@ -10,6 +10,13 @@ export interface OAuthConfig {
   tokenEndpoint?: string;
 }
 
+export type ToolkitMode = "generic" | "table" | "off";
+
+export interface ToolkitConfig {
+  mode: ToolkitMode;
+  tableTools?: string[];
+}
+
 export interface OpenNowConfig {
   instanceUrl: string;
   transport: Transport;
@@ -21,6 +28,8 @@ export interface OpenNowConfig {
   enabledSkills?: string[];
   dbPath?: string;
   oauth?: OAuthConfig;
+  /** Generated wide surface (table/record/script tools). Default: generic (on). */
+  toolkit?: ToolkitConfig;
 }
 
 export type Env = Record<string, string | undefined>;
@@ -49,6 +58,17 @@ export function loadConfig(
     throw new Error(`OPEN_NOW_TRANSPORT must be stdio|http, got ${transport}`);
   }
 
+  const toolkitMode: ToolkitMode =
+    (env.OPEN_NOW_TOOLKIT as ToolkitMode | undefined) ??
+    fromFile.toolkit?.mode ??
+    "generic";
+  if (!["generic", "table", "off"].includes(toolkitMode)) {
+    throw new Error(`OPEN_NOW_TOOLKIT must be generic|table|off, got ${toolkitMode}`);
+  }
+  const tableTools = env.OPEN_NOW_TABLE_TOOLS
+    ? env.OPEN_NOW_TABLE_TOOLS.split(",").map((s) => s.trim()).filter(Boolean)
+    : fromFile.toolkit?.tableTools;
+
   return {
     instanceUrl: instanceUrl.replace(/\/$/, ""),
     transport,
@@ -62,6 +82,7 @@ export function loadConfig(
       ? env.OPEN_NOW_ENABLED_SKILLS.split(",").map((s) => s.trim())
       : fromFile.enabledSkills,
     dbPath: env.OPEN_NOW_DB_PATH ?? fromFile.dbPath,
+    toolkit: { mode: toolkitMode, tableTools },
     oauth: {
       clientId: env.OPEN_NOW_OAUTH_CLIENT_ID ?? fromFile.oauth?.clientId ?? "",
       redirectUri:
