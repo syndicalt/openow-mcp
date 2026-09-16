@@ -1,0 +1,17 @@
+{
+  "name": "@open-now/mcp-server",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./bin": "./src/bin/open-now.ts"
+  },
+  "bin": {
+    "open-now": "./src/bin/open-now.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.0",
+    "@open-now/contracts": "*",
+    "zod": "^4.1.5"
+  }
+}
