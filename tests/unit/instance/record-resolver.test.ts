@@ -3,8 +3,8 @@ import { installShim } from "../helpers/glide-shim.js";
 import { loadScriptInclude } from "./load-script-includes.js";
 
 let RecordResolver: new () => {
-  resolveRecord: (table: string, value: string) => Record<string, unknown> | null;
-  findCi: (input: string, classFilter?: string) => Record<string, unknown>;
+  resolveRecord: (table: string, value: string) => any;
+  findCi: (input: string, classFilter?: string) => any;
 };
 
 beforeAll(() => {

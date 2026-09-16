@@ -32,9 +32,19 @@ var Audit = (function () {
     var gr = new GlideRecordSecure('sn_headless_run');
     gr.addQuery('request_id', requestId);
     gr.orderByDesc('sys_created_on');
+    gr.setLimit(10);
     gr.query();
-    if (gr.next()) { return this.fromRecord(gr); }
-    return null;
+    var fallback = null;
+    var settled = null;
+    while (gr.next()) {
+      var row = this.fromRecord(gr);
+      if (!fallback) { fallback = row; }
+      if (row.outcome === 'applied') { return row; }
+      if (row.outcome !== 'pending' && !settled) { settled = row; }
+    }
+    // Prefer a settled outcome (error/denied/unsupported/applied) over a stale
+    // pending row from an earlier attempt; pending wins only when nothing settled.
+    return settled || fallback;
   };
 
   Audit.prototype.fromRecord = function (gr) {

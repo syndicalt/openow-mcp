@@ -15,6 +15,8 @@ function skillRow(id: string, confirmation: string, executable: Record<string, s
     confirmation,
     executable: executable.type,
     executable_ref: executable.ref,
+    roles_any_of: ((extra.rolesAnyOf as string[]) ?? []).join(","),
+    roles_all_of: "",
     active: true,
     doc_json: JSON.stringify({
       id,
@@ -39,6 +41,7 @@ beforeAll(() => {
           number: "INC0010001",
           short_description: "printer on fire",
           state: "1",
+          active: true,
           assigned_to: "u_me",
           work_notes: "",
           comments: "",
@@ -61,12 +64,13 @@ beforeAll(() => {
         }),
         skillRow("sn.itsm.incident.update", "update_owned", { type: "script_include", ref: "ExecITSM", plan: "plan_incident_update", apply: "apply_incident_update" }, {
           inputs: {
+            incident_number: { type: "record_number", required: true },
             mode: { type: "enum", required: true, enum: ["comment", "work_note", "resolve"] },
             body: { type: "string", required: false },
             resolution_code: { type: "string", required: false },
             resolution_notes: { type: "string", required: false },
           },
-          policy: { requireDescribe: true, autoApply: true },
+          policy: { requireDescribe: true },
           tablesRead: ["incident"],
           tablesWritten: ["incident"],
         }),
@@ -99,9 +103,10 @@ describe("SkillRuntime end-to-end (shim)", () => {
   });
 
   test("incident.update: pending diff, then confirm applies exactly once, then replays", () => {
+    const inputs = { incident_number: "INC0010001", mode: "work_note", body: "rebooted the server" };
     const pending = invoke({
       skillId: "sn.itsm.incident.update",
-      inputs: { mode: "work_note", body: "rebooted the server" },
+      inputs,
       clientApp: "test",
       requestId: "req-e2e-1",
     });
@@ -111,16 +116,19 @@ describe("SkillRuntime end-to-end (shim)", () => {
 
     const applied = invoke({
       skillId: "sn.itsm.incident.update",
-      inputs: { mode: "work_note", body: "rebooted the server" },
+      inputs,
       clientApp: "test",
       requestId: "req-e2e-1",
       confirm: true,
     });
     expect(applied.outcome).toBe("applied");
+    expect(
+      (applied.focusedPayload as { record_numbers?: string[] })?.record_numbers,
+    ).toContain("INC0010001");
 
     const replay = invoke({
       skillId: "sn.itsm.incident.update",
-      inputs: { mode: "work_note", body: "rebooted the server" },
+      inputs,
       clientApp: "test",
       requestId: "req-e2e-1",
       confirm: true,
@@ -133,7 +141,7 @@ describe("SkillRuntime end-to-end (shim)", () => {
   test("resolve requires resolution_code + resolution_notes", () => {
     const res = invoke({
       skillId: "sn.itsm.incident.update",
-      inputs: { mode: "resolve", body: "fixed" },
+      inputs: { incident_number: "INC0010001", mode: "resolve", body: "fixed" },
       clientApp: "test",
       requestId: "req-e2e-2",
     });

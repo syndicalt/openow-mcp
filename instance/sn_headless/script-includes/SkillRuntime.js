@@ -115,6 +115,15 @@ var SkillRuntime = (function () {
         tables: doc.tablesRead, numbers: []
       }, { focusedPayload: plan.focusedPayload });
     }
+    if (plan.missingFields && plan.missingFields.length > 0) {
+      return this.finish(audit, requestObj, started, {
+        outcome: 'error',
+        confirmation: doc.confirmation,
+        message: 'Missing required inputs',
+        missingFields: plan.missingFields,
+        tables: doc.tablesRead, numbers: []
+      }, plan.focusedPayload || {});
+    }
 
     var policy = doc.policy || {};
     var owned = plan.owned === true;
@@ -325,12 +334,17 @@ var SkillRuntime = (function () {
 
   SkillRuntime.prototype.validateInputs = function (doc, inputs) {
     var spec = doc.inputs || {};
+    // pass through all caller inputs (executables may accept documented keys the
+    // registry spec does not list yet); validation only governs known spec keys
     var values = {};
+    for (var k in inputs) {
+      if (inputs.hasOwnProperty(k)) { values[k] = inputs[k]; }
+    }
     var missing = [];
     for (var name in spec) {
       if (!spec.hasOwnProperty(name)) { continue; }
       var s = spec[name];
-      var v = inputs[name];
+      var v = values[name];
       if (v === undefined || v === null || v === '') {
         if (s.default !== undefined && s.default !== null) {
           values[name] = s.default;
@@ -341,7 +355,6 @@ var SkillRuntime = (function () {
       }
       var err = this.typeError(name, s, v);
       if (err) { return { values: {}, missingFields: missing, error: err }; }
-      values[name] = v;
     }
     return { values: values, missingFields: missing, error: null };
   };

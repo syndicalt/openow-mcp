@@ -316,7 +316,7 @@ export function installShim(opts: ShimOptions = {}): ShimState {
       this.idx = -1;
     }
 
-    private compute(list: FakeRecord[]): number | string {
+    private compute(list: Array<{ [k: string]: unknown }>): number | string {
       if (this.agg === "COUNT") return list.length;
       const values = list.map((r) => Number(r[this.aggField!] ?? 0));
       if (this.agg === "SUM") return values.reduce((a, b) => a + b, 0);

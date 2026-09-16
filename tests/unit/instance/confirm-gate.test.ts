@@ -11,7 +11,7 @@ let ConfirmGate: new () => {
   ) => boolean;
   buildDiff: (record: { getValue: (f: string) => unknown }, proposed: Record<string, unknown>) => Array<Record<string, unknown>>;
   buildDraft: (summary: string, fields: Record<string, unknown>) => Record<string, unknown>;
-  replay: (storedRun: Record<string, unknown>) => Record<string, unknown> | null;
+  replay: (storedRun: Record<string, unknown> | null) => Record<string, unknown> | null;
 };
 
 beforeAll(() => {

@@ -20,23 +20,23 @@ beforeAll(() => {
 describe("catalog <-> executable binding", () => {
   test("every Exec class referenced by the catalog is installed", () => {
     for (const doc of allSkillDocs) {
-      const ref = doc.executable.ref;
+      const ref = doc.executable.ref!;
       expect(registry[ref], `${doc.id} -> ${ref}`).toBeDefined();
     }
   });
 
   test("plan methods exist for all 32 skills", () => {
     for (const doc of allSkillDocs) {
-      const cls = registry[doc.executable.ref] as Record<string, unknown>;
-      expect(typeof cls?.[doc.executable.plan!], `${doc.id}.${doc.executable.plan}`).toBe("function");
+      const cls = registry[doc.executable.ref!] as { prototype?: Record<string, unknown> };
+      expect(typeof cls?.prototype?.[doc.executable.plan!], `${doc.id}.${doc.executable.plan}`).toBe("function");
     }
   });
 
   test("apply methods exist for every write-class skill", () => {
     for (const doc of allSkillDocs) {
       if (!isWriteClass(doc.confirmation)) continue;
-      const cls = registry[doc.executable.ref] as Record<string, unknown>;
-      expect(typeof cls?.[doc.executable.apply!], `${doc.id}.${doc.executable.apply}`).toBe("function");
+      const cls = registry[doc.executable.ref!] as { prototype?: Record<string, unknown> };
+      expect(typeof cls?.prototype?.[doc.executable.apply!], `${doc.id}.${doc.executable.apply}`).toBe("function");
     }
   });
 });
