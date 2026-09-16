@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bunx tsc --noEmit
+      - run: bun test tests/unit
+      - run: bun run build:app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: update-set-xml
+          path: dist/sn_headless/update-set.xml
+          if-no-files-found: warn
+          overwrite: true
+
+  integration:
+    runs-on: ubuntu-latest
+    env:
+      SNOW_INSTANCE: ${{ secrets.SNOW_INSTANCE }}
+      SNOW_ACCESS_TOKEN: ${{ secrets.SNOW_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bun run build:app
+      - run: bun test tests/integration
+        if: "env.SNOW_INSTANCE != ''"
+      - run: "echo 'integration skipped: no instance'"
+        if: "env.SNOW_INSTANCE == ''"
+      - run: bun run eval -- --gateway instance
+        if: "env.SNOW_INSTANCE != ''"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: update-set-xml
+          path: dist/sn_headless/update-set.xml
+          if-no-files-found: warn
+          overwrite: true

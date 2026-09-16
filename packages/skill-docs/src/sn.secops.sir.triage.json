@@ -1,0 +1,65 @@
+{
+  "$schema": "open-now/skill-doc/v1",
+  "id": "sn.secops.sir.triage",
+  "name": "Security incident triage",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "SOC analyst",
+  "intent": "Same posture as HR. Structured inputs. No broad searches. Correlate to CIs and to ITSM incidents without copying IOC text into low-privilege chats.",
+  "inputs": {
+    "sir_number": {
+      "type": "record_number",
+      "required": true,
+      "description": "Security incident response number, e.g. SIR0010001."
+    }
+  },
+  "tablesRead": [
+    "sn_si_incident",
+    "cmdb_ci",
+    "incident",
+    "sys_hub_flow"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [
+    "sn_si.analyst"
+  ],
+  "rolesAllOf": [],
+  "confirmation": "restricted",
+  "procedure": [
+    "Require sn_si.analyst or equivalent.",
+    "Load SIR by number. Return severity, state, assigned to, related CI, related ITSM incident.",
+    "Mutations only through SIR playbooks / Flows published as execute skills."
+  ],
+  "sideEffects": [
+    "Playbook / Flow only; no direct record mutations."
+  ],
+  "returns": [
+    "sir_number",
+    "severity",
+    "state",
+    "assigned_to",
+    "related_ci",
+    "related_incident"
+  ],
+  "relatedSkills": [
+    "sn.cmdb.ci.find"
+  ],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecSecOps",
+    "plan": "plan_sir_triage",
+    "apply": "apply_sir_triage"
+  },
+  "structuredInputs": true,
+  "priority": 2,
+  "policy": {
+    "requireDescribe": true
+  },
+  "eval": {
+    "prompts": [
+      "Triage SIR0010001: severity, state, assigned to, and any related incident.",
+      "What CI is SIR0010001 tied to, and is there an open ITSM incident for it?",
+      "Summarize the AlertLogic SIR we got last night without dumping the IOC text."
+    ]
+  }
+}

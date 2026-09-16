@@ -1,0 +1,53 @@
+{
+  "$schema": "open-now/skill-doc/v1",
+  "id": "sn.csm.case.briefing",
+  "name": "Account and case briefing",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "Customer service agent",
+  "intent": "Walk into a call with the account's open cases, entitlement, and last five interactions — Claudeforce meeting-prep, but for service.",
+  "inputs": {
+    "account_number": {
+      "type": "record_number",
+      "required": true,
+      "description": "Customer account number, e.g. ACC0010001."
+    }
+  },
+  "tablesRead": [
+    "sn_customerservice_case",
+    "account",
+    "entitlement"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Resolve account. Respect CSM roles and account teams; 403 is a valid outcome.",
+    "Open cases by priority. Entitlements that are expired get a flag.",
+    "Do not pull internal work notes into a customer-facing draft without an explicit internal mode."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "account_number",
+    "account_name",
+    "open_cases",
+    "entitlements",
+    "last_five_interactions"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecCSM",
+    "plan": "plan_case_briefing"
+  },
+  "structuredInputs": false,
+  "priority": 2,
+  "eval": {
+    "prompts": [
+      "Brief me on Acme Corp before this call starts.",
+      "Give me the open cases and entitlement status for account ACC0010001.",
+      "What were this customer's last five interactions, and are any of their entitlements expired?"
+    ]
+  }
+}

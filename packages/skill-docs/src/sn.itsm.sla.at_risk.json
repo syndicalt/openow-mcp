@@ -1,0 +1,47 @@
+{
+  "id": "sn.itsm.sla.at_risk",
+  "name": "SLA / OLA at-risk board",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "fulfiller, manager",
+  "intent": "Show work that will breach soon in the user's scope.",
+  "inputs": {},
+  "tablesRead": [
+    "task_sla",
+    "incident",
+    "sc_req_item"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Filter task_sla on active, not breached, business_percentage >= 75, task in user's groups or assigned to user.",
+    "Return number, type, percentage, planned end, assigned to.",
+    "Cap 25. Link each row to the matching domain skill."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "number",
+    "type",
+    "percentage",
+    "planned_end",
+    "assigned_to"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecITSM",
+    "plan": "plan_sla_at_risk"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Which tickets are about to breach their SLA?",
+      "Show my at-risk SLA board.",
+      "What will breach in the next hour?"
+    ]
+  }
+}

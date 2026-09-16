@@ -1,0 +1,56 @@
+{
+  "$schema": "open-now/skill-doc/v1",
+  "id": "sn.platform.script.impact",
+  "name": "Impact analysis before changing a table, field, or script",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "Builder",
+  "intent": "Community MCP servers already grew table-config / field-reference / script-reference tools for a reason. This is that idea as a first-class skill.",
+  "inputs": {
+    "subject": {
+      "type": "string",
+      "required": true,
+      "description": "Table name, field name, or Script Include name to analyze impact for."
+    }
+  },
+  "tablesRead": [
+    "sys_db_object",
+    "sys_dictionary",
+    "sys_script",
+    "sys_script_include",
+    "sys_hub_flow",
+    "sys_ui_policy",
+    "sys_security_acl",
+    "sys_transform_map"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Input: table, field, or Script Include name.",
+    "Search Business Rules, Script Includes, Flows, UI Policies, ACLs, Transform Maps that reference it.",
+    "Return a count + top 20 references with type and name. Do not fetch every script body."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "subject",
+    "count",
+    "references"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecPlatform",
+    "plan": "plan_script_impact"
+  },
+  "structuredInputs": false,
+  "priority": 2,
+  "eval": {
+    "prompts": [
+      "What references the incident.state field before I change its choices?",
+      "Which Business Rules and Flows call ScriptInclude MyUtils?",
+      "Impact analysis on table cmdb_ci: who touches it before I add a column?"
+    ]
+  }
+}

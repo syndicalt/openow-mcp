@@ -1,0 +1,85 @@
+{
+  "$schema": "open-now/skill-doc/v1",
+  "id": "sn.hrsd.case.handle",
+  "name": "Handle an HR case",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "HR agent",
+  "intent": "HR is where headless interfaces get companies fired. This skill is restricted, structured-input only, and never returns fields the agent cannot see in the HR Agent Workspace.",
+  "inputs": {
+    "case_number": {
+      "type": "record_number",
+      "required": false,
+      "description": "HR case number, e.g. HRC0010001. Alternatively supply subject_person + category."
+    },
+    "category": {
+      "type": "enum",
+      "required": false,
+      "enum": [
+        "Absence",
+        "Benefits",
+        "Disability",
+        "Employment",
+        "General",
+        "Health",
+        "Life events",
+        "Pay",
+        "Personal info",
+        "Recruitment",
+        "Retirement",
+        "Time off",
+        "Work"
+      ],
+      "description": "HR service category; used with subject_person when no case number is supplied."
+    },
+    "subject_person": {
+      "type": "string",
+      "required": false,
+      "description": "Name of the employee the case is about; used with category when no case number is supplied."
+    }
+  },
+  "tablesRead": [
+    "hr_case",
+    "sys_hub_flow"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [
+    "sn_hr_core.case_writer"
+  ],
+  "rolesAllOf": [],
+  "confirmation": "restricted",
+  "procedure": [
+    "Require sn_hr_core.case_writer or customer equivalent. Refuse discover-driven raw table access to HR tables from now/headless for users without the role.",
+    "No encoded queries from the model. Inputs are case number or subject person + category via picker.",
+    "Default return: number, state, topic, assigned to — not the case body — until the user asks to open the body.",
+    "Writes go through HR Flows only (LE activity, case comment). No generic Table PATCH."
+  ],
+  "sideEffects": [
+    "HR Flow actions only (Lifecycle Event activity, case comment); no generic Table PATCH."
+  ],
+  "returns": [
+    "case_number",
+    "state",
+    "topic",
+    "assigned_to"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecHRSD",
+    "plan": "plan_case_handle",
+    "apply": "apply_case_handle"
+  },
+  "structuredInputs": true,
+  "priority": 2,
+  "policy": {
+    "requireDescribe": true
+  },
+  "eval": {
+    "prompts": [
+      "Show me HR case HRC0010001: state, topic, and who it is assigned to.",
+      "Find the open HR case about John Miller under Benefits.",
+      "Any HR cases about pay disputes assigned to me today?"
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "cab-prep",
+  "description": "§8.4 case 2: \"Prep CHG0031842 for CAB\" → describe then cab_prep; both read-only, no state change.",
+  "steps": [
+    {
+      "tool": "describe",
+      "args": { "skillId": "sn.itsm.change.cab_prep" },
+      "expectOk": true,
+      "expectNoWrite": true
+    },
+    {
+      "tool": "dispatch_readonly",
+      "args": { "skillId": "sn.itsm.change.cab_prep", "inputs": { "change_number": "CHG0031842" } },
+      "expectOk": true,
+      "expectOutcome": "ok",
+      "expectNoWrite": true
+    }
+  ]
+}

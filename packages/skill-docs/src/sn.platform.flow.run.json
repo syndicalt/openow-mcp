@@ -1,0 +1,61 @@
+{
+  "$schema": "open-now/skill-doc/v1",
+  "id": "sn.platform.flow.run",
+  "name": "Run a published Flow or subflow",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "Any user the Flow allows",
+  "intent": "The preferred write path when the customer already automated the work. Skills should call Flows rather than re-code them.",
+  "inputs": {
+    "flow_name": {
+      "type": "string",
+      "required": true,
+      "description": "Name of a Flow or subflow published to Action Fabric / MCP Server Console, e.g. 'Create change from alert'."
+    },
+    "inputs": {
+      "type": "object",
+      "required": false,
+      "description": "Flow input parameters as a JSON object; keys must match the Flow's input schema exactly."
+    }
+  },
+  "tablesRead": [
+    "sys_hub_flow",
+    "sys_flow_definition"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "execute",
+  "procedure": [
+    "Only Flows explicitly published to Action Fabric / MCP Server Console are callable.",
+    "Describe the input schema first. Refuse extra keys.",
+    "Confirmation class inherited from the Flow's classification; default execute."
+  ],
+  "sideEffects": [
+    "Whatever the Flow writes."
+  ],
+  "returns": [
+    "flow_name",
+    "outcome",
+    "execution_state"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecPlatform",
+    "plan": "plan_flow_run",
+    "apply": "apply_flow_run"
+  },
+  "structuredInputs": false,
+  "priority": 2,
+  "policy": {
+    "requireDescribe": true
+  },
+  "eval": {
+    "prompts": [
+      "Run the 'Create change from alert' Flow for the app_sap_prod alert.",
+      "Invoke the published subflow 'Notify on-call' with alert sys_id as input.",
+      "Execute the Flow 'Start CAB approval' for CHG0031842."
+    ]
+  }
+}

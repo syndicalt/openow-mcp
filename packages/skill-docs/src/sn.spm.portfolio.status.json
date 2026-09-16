@@ -1,0 +1,63 @@
+{
+  "id": "sn.spm.portfolio.status",
+  "name": "Portfolio, goal, and milestone status",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "PMO / portfolio manager",
+  "intent": "A status a steering committee can hear. Not a dump of every project record.",
+  "inputs": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "description": "Portfolio or goal name"
+    },
+    "window_days": {
+      "type": "int",
+      "required": false,
+      "default": 14,
+      "min": 1,
+      "max": 90,
+      "description": "Milestone due window"
+    }
+  },
+  "tablesRead": [
+    "spm_portfolio",
+    "spm_goal",
+    "pm_project",
+    "pm_project_task"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Resolve portfolio or goal by name.",
+    "Summarize projects by state and RAG if the customer uses it (custom field — describe first).",
+    "List milestones due in the window (default 14 days) that are not Complete.",
+    "Surface blocked projects with their latest status comment, not the whole journal."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "projects",
+    "milestones",
+    "blocked"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecSPM",
+    "plan": "plan_portfolio_status"
+  },
+  "structuredInputs": false,
+  "featureDeps": [
+    "Strategic Portfolio Management"
+  ],
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Status of the 2026 transformation portfolio.",
+      "Which milestones are due in the next two weeks?",
+      "Are any projects blocked in our portfolio?"
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "id": "sn.cmdb.service.health",
+  "name": "Application service health snapshot",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "SRE, service owner",
+  "intent": "One snapshot: service status, open P1/P2, open alerts, next change.",
+  "inputs": {
+    "service": {
+      "type": "string",
+      "required": true,
+      "description": "Application service name (resolved constrained to service classes)"
+    }
+  },
+  "tablesRead": [
+    "cmdb_ci_service",
+    "cmdb_ci",
+    "incident",
+    "em_alert"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Resolve the service via sn.cmdb.ci.find constrained to service classes.",
+    "Summarize related open incidents and alerts. Do not list every member CI unless asked."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "service",
+    "status",
+    "incidents",
+    "alerts",
+    "next_change"
+  ],
+  "relatedSkills": [
+    "sn.cmdb.ci.find"
+  ],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecCMDB",
+    "plan": "plan_service_health"
+  },
+  "structuredInputs": false,
+  "featureDeps": [
+    "CMDB"
+  ],
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "How healthy is the payroll application service?",
+      "Health snapshot for app_sap_prod.",
+      "Is the ERP service up and what is open on it?"
+    ]
+  }
+}

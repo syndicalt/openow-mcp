@@ -1,0 +1,72 @@
+{
+  "id": "sn.itsm.change.assess_risk",
+  "name": "Assess risk, schedule conflict, CI collision",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "change implementer, CAB",
+  "intent": "The skill ServiceNow already called out as the MCP-vs-Table-API showcase. Return a verdict a CAB member can use.",
+  "inputs": {
+    "change_number": {
+      "type": "record_number",
+      "required": true,
+      "description": "Change request number to assess"
+    },
+    "depth": {
+      "type": "int",
+      "required": false,
+      "default": 2,
+      "min": 1,
+      "max": 3,
+      "description": "CI relationship walk depth"
+    }
+  },
+  "tablesRead": [
+    "change_request",
+    "task_ci",
+    "cmdb_ci",
+    "cmdb_rel_ci"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [
+    "itil",
+    "change_manager",
+    "sn_change_read"
+  ],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Load the change and its CIs. Walk one hop of cmdb_rel_ci plus application service membership (sn.cmdb.ci.blast_radius).",
+    "Find overlapping changes: planned start/end overlap AND intersecting CI set (including parents/services).",
+    "Run the customer's risk calculator if it is a published API / Flow; otherwise apply the documented matrix (impact × probability × type) and label it heuristic.",
+    "Flag missing backout plan, missing test plan, implementer not in support group, blackout window violations.",
+    "Return: risk_level, conflicts[], missing_fields[], ci_blast_count, recommendation (ready / not ready / needs CAB discussion)."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "risk_level",
+    "conflicts",
+    "missing_fields",
+    "ci_blast_count",
+    "recommendation"
+  ],
+  "relatedSkills": [
+    "sn.itsm.change.cab_prep",
+    "sn.itsm.change.draft",
+    "sn.cmdb.ci.blast_radius"
+  ],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecITSM",
+    "plan": "plan_change_assess_risk"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Assess the risk on CHG0031842 before CAB.",
+      "Is CHG0031842 safe to schedule Saturday?",
+      "Rate the risk of the change and flag conflicts."
+    ]
+  }
+}

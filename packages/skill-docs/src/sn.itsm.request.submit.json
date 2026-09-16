@@ -1,0 +1,73 @@
+{
+  "id": "sn.itsm.request.submit",
+  "name": "Submit a catalog item or order guide",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "requester or fulfiller",
+  "intent": "Submit through the catalog engine so variables, price, approvals, and request flows fire. Never insert sc_req_item by hand.",
+  "inputs": {
+    "item": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100,
+      "description": "Catalog item name or sys_id"
+    },
+    "variables": {
+      "type": "object",
+      "required": false,
+      "description": "Variable name/value pairs for the item"
+    },
+    "requested_for": {
+      "type": "string",
+      "required": false,
+      "description": "User for on-behalf ordering"
+    }
+  },
+  "tablesRead": [
+    "sc_cat_item",
+    "cart",
+    "sc_req_item",
+    "item_option_new"
+  ],
+  "tablesWritten": [
+    "sc_request",
+    "sc_req_item"
+  ],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "create",
+  "procedure": [
+    "Resolve the item by name or sys_id against active sc_cat_item the user can see (catalog user criteria).",
+    "Describe the variable set. Collect values. Reject unknown variable names.",
+    "If the item is a record producer, call the producer API, not the cart, unless the customer standard is cart-only.",
+    "On confirm, submit via Service Catalog API / Flow. Return RITM and REQ numbers and the approval expectation."
+  ],
+  "sideEffects": [
+    "submits through the catalog engine, creating REQ/RITM records and starting approval flows"
+  ],
+  "returns": [
+    "ritm_number",
+    "req_number",
+    "approval_expectation"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecITSM",
+    "plan": "plan_request_submit",
+    "apply": "apply_request_submit"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "policy": {
+    "requireDescribe": true
+  },
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Order a new laptop for me.",
+      "Submit the catalog item for more disk space on db-prod-07.",
+      "Order software X for Jane on her behalf."
+    ]
+  }
+}

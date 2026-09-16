@@ -1,0 +1,60 @@
+{
+  "id": "sn.itsm.problem.open",
+  "name": "Open a problem from an incident cluster",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "problem coordinator",
+  "intent": "Create a problem that actually links the cluster rather than a duplicate empty problem.",
+  "inputs": {
+    "incident_numbers": {
+      "type": "array",
+      "required": true,
+      "maxItems": 20,
+      "description": "One or more incident numbers to cluster into a problem"
+    }
+  },
+  "tablesRead": [
+    "problem",
+    "incident",
+    "cmdb_ci"
+  ],
+  "tablesWritten": [
+    "problem",
+    "incident"
+  ],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "create",
+  "procedure": [
+    "Input: one or more incident numbers. Load them; abort if they do not share a plausible CI or symptom.",
+    "Draft problem: short_description from the cluster, cmdb_ci from majority CI, first_reported_by_task = oldest incident.",
+    "On confirm, insert problem and set incident.problem_id on each. Work note on each incident.",
+    "Do not set known_error or workaround in this skill; that is a later update."
+  ],
+  "sideEffects": [
+    "inserts a problem and links each incident via problem_id; adds work notes to the incidents"
+  ],
+  "returns": [
+    "problem_number"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecITSM",
+    "plan": "plan_problem_open",
+    "apply": "apply_problem_open"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "policy": {
+    "requireDescribe": true
+  },
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Open a problem for INC0012345 and INC0012346.",
+      "These three incidents look related, create a problem.",
+      "Cluster INC0012345 into a problem record."
+    ]
+  }
+}

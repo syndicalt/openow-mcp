@@ -78,7 +78,7 @@ export type SkillPolicy = z.infer<typeof SkillPolicySchema>;
  */
 export const SkillDocSchema = z.object({
   $schema: z.literal("open-now/skill-doc/v1").optional(),
-  id: z.string().regex(/^sn\.[a-z0-9]+(\.[a-z0-9]+)+$/, "dotted skill id, e.g. sn.itsm.incident.triage"),
+  id: z.string().regex(/^sn\.[a-z0-9_]+(\.[a-z0-9_]+)+$/, "dotted skill id, e.g. sn.itsm.incident.triage"),
   name: z.string().min(1),
   version: z.string().regex(/^\d+\.\d+\.\d+$/, "semver"),
   status: SkillStatusSchema,

@@ -1,0 +1,70 @@
+{
+  "id": "sn.itsm.change.implement",
+  "name": "Move a change through implement / review",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "change implementer",
+  "intent": "Advance a scheduled change through implementation and review using the platform state model, not invented states.",
+  "inputs": {
+    "change_number": {
+      "type": "record_number",
+      "required": true,
+      "description": "Change number to advance"
+    },
+    "transition": {
+      "type": "enum",
+      "required": false,
+      "enum": [
+        "implement",
+        "review",
+        "close"
+      ],
+      "description": "Requested state transition"
+    }
+  },
+  "tablesRead": [
+    "change_request",
+    "change_task"
+  ],
+  "tablesWritten": [
+    "change_request",
+    "change_task"
+  ],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "update_shared",
+  "procedure": [
+    "Load by number. Confirm type and current state allow the requested transition.",
+    "Require open change tasks to be addressed before Review / Closed.",
+    "On implement: set state per process, stamp actual start, add work note.",
+    "On review close: require close codes the Data Policy expects.",
+    "Never skip CAB-required approval just because the window has started."
+  ],
+  "sideEffects": [
+    "updates change state, stamps actual start time, adds work notes, and updates task states"
+  ],
+  "returns": [
+    "change_number",
+    "state"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecITSM",
+    "plan": "plan_change_implement",
+    "apply": "apply_change_implement"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "policy": {
+    "requireDescribe": true
+  },
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Move CHG0031842 to Implement.",
+      "Mark the change CHG0031842 as implemented.",
+      "Review and close the change CHG0031842."
+    ]
+  }
+}

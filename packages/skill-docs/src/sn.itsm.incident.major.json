@@ -1,0 +1,72 @@
+{
+  "id": "sn.itsm.incident.major",
+  "name": "Declare or run a major incident",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "major incident manager",
+  "intent": "Promote an incident onto the major-incident process with the right comms group and affected services — without letting the model invent a parallel process.",
+  "inputs": {
+    "incident_number": {
+      "type": "record_number",
+      "required": true,
+      "description": "Incident number to declare or run as major"
+    },
+    "declare": {
+      "type": "boolean",
+      "required": false,
+      "description": "true to declare/advance the major incident; false or omitted to refresh the MIM dashboard"
+    }
+  },
+  "tablesRead": [
+    "incident",
+    "m2m_incident_service",
+    "sys_user_group"
+  ],
+  "tablesWritten": [
+    "incident",
+    "m2m_incident_service"
+  ],
+  "rolesAnyOf": [
+    "major_incident_manager"
+  ],
+  "rolesAllOf": [],
+  "confirmation": "update_shared",
+  "procedure": [
+    "Require major_incident_manager (or customer-equivalent) role.",
+    "If declaring: set major_incident_state per the customer's process (often Proposed → Accepted). Do not invent custom states.",
+    "Attach affected application services from sn.cmdb.ci.blast_radius.",
+    "Propose communication channel / incident task for comms. Do not email outside the instance unless a published Flow action exists for that.",
+    "Return the MIM dashboard payload: severity, services, last update, next comms time."
+  ],
+  "sideEffects": [
+    "updates major incident fields and the affected services m2m; proposes customer-visible comms"
+  ],
+  "returns": [
+    "severity",
+    "services",
+    "last_update",
+    "next_comms_time"
+  ],
+  "relatedSkills": [
+    "sn.cmdb.ci.blast_radius"
+  ],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecITSM",
+    "plan": "plan_incident_major",
+    "apply": "apply_incident_major"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "policy": {
+    "requireDescribe": true
+  },
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Declare INC0012345 a major incident.",
+      "Update me on the major incident INC0012345.",
+      "Set up the major incident process for INC0012345."
+    ]
+  }
+}

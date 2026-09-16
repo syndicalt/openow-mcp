@@ -1,0 +1,74 @@
+{
+  "id": "sn.ops.report.aggregate",
+  "name": "Safe aggregate / PA snapshot",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "manager, analyst",
+  "intent": "Counts and breakdowns without pulling row dumps into context.",
+  "inputs": {
+    "table": {
+      "type": "string",
+      "required": true,
+      "description": "Allowlisted operational table"
+    },
+    "aggregate": {
+      "type": "enum",
+      "required": false,
+      "default": "count",
+      "enum": [
+        "count",
+        "avg",
+        "min",
+        "max",
+        "sum"
+      ],
+      "description": "Aggregate function"
+    },
+    "group_by": {
+      "type": "string",
+      "required": false,
+      "description": "Group-by field"
+    },
+    "filter": {
+      "type": "string",
+      "required": false,
+      "description": "Encoded query filter"
+    }
+  },
+  "tablesRead": [
+    "incident",
+    "change_request",
+    "sc_req_item",
+    "task"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Allowlisted tables and group-by fields only.",
+    "Support COUNT / AVG / MIN / MAX / SUM with a cap on groups.",
+    "Reject requests that are actually record lists in disguise."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "result",
+    "groups"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecReport",
+    "plan": "plan_report_aggregate"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "How many P1 incidents were opened last week?",
+      "Break down open changes by type.",
+      "Average time-to-resolve for incidents this month."
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "sn.me.work",
+  "name": "My work, approvals, watches",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "any employee",
+  "intent": "The universal home skill. First call on a new session after identity is known.",
+  "inputs": {},
+  "tablesRead": [
+    "task",
+    "sysapproval_approver",
+    "incident",
+    "sc_req_item",
+    "change_request"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Lists: assigned to me (open), approvals pending where approver = me, watches, requested_for = me that are not closed.",
+    "Each line: number, type, short description, state, due.",
+    "Cap 15 per list. Offer the matching domain skill as the next action."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "assigned",
+    "approvals",
+    "watches",
+    "requested_for"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecMe",
+    "plan": "plan_work"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "What is on my plate today?",
+      "Show my open approvals.",
+      "What am I watching and waiting on?"
+    ]
+  }
+}

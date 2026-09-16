@@ -1,0 +1,54 @@
+{
+  "id": "sn.kb.answer",
+  "name": "Answer from Knowledge and catalog",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "requester or fulfiller",
+  "intent": "Prefer a published article or a catalog item over opening a ticket.",
+  "inputs": {
+    "query": {
+      "type": "string",
+      "required": true,
+      "maxLength": 200,
+      "description": "Question or 'I need X provisioned' intent"
+    }
+  },
+  "tablesRead": [
+    "kb_knowledge",
+    "sc_cat_item"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Search published, valid-to-future articles the user can read (user criteria).",
+    "If the intent is \"I need X provisioned\", also search sc_cat_item the user can order.",
+    "Return article number + excerpt + catalog item names. Do not paste entire articles into context; return a pointer and the first useful paragraph.",
+    "If confidence is low, say so and offer sn.itsm.incident.triage or sn.itsm.request.submit."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "articles",
+    "catalog_items"
+  ],
+  "relatedSkills": [
+    "sn.itsm.incident.triage",
+    "sn.itsm.request.submit"
+  ],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecKB",
+    "plan": "plan_answer"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "How do I reset my VPN password?",
+      "Is there an article about the payment outage?",
+      "I need a new mouse, what can I order?"
+    ]
+  }
+}

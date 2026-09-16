@@ -1,0 +1,59 @@
+{
+  "id": "sn.cmdb.ci.find",
+  "name": "Find a CI with identification context",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "anyone with cmdb_read",
+  "intent": "Return the right CI, not the first name match. This skill is the anti-duplicate primitive every other skill should call.",
+  "inputs": {
+    "query": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100,
+      "description": "Name, FQDN, serial number, asset tag, IP address, or sys_id"
+    }
+  },
+  "tablesRead": [
+    "cmdb_ci",
+    "cmdb_rel_ci",
+    "cmdb_identification"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [
+    "cmdb_read"
+  ],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Accept name, FQDN, serial number, asset tag, IP address, or sys_id.",
+    "Prefer Identification Engine lookup when available. Fall back to exact name + class, then contains-name with class filter.",
+    "Always return class, operational_status, install_status, managed_by_group, support_group, last discovered, duplicate_of if set.",
+    "If more than one plausible CI, return the candidates and refuse to guess. Downstream write skills must not pick silently."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "class",
+    "operational_status",
+    "install_status",
+    "managed_by_group",
+    "support_group",
+    "last_discovered",
+    "duplicate_of"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecCMDB",
+    "plan": "plan_ci_find"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Find the CI for db-prod-07.",
+      "What CI has this serial number?",
+      "Look up the CI for 10.0.0.42."
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "open-now/skill-doc/v1",
+  "id": "sn.spm.project.prep",
+  "name": "Project status / RAID prep",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "Project manager",
+  "intent": "Status narrative plus RAID highlights for a named project.",
+  "inputs": {
+    "project_number": {
+      "type": "record_number",
+      "required": false,
+      "description": "Project number, e.g. PRJ0010023. Either project_number or project_name must be supplied."
+    },
+    "project_name": {
+      "type": "string",
+      "required": false,
+      "description": "Project name. Either project_number or project_name must be supplied."
+    }
+  },
+  "tablesRead": [
+    "project",
+    "planned_task"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Resolve project by number or name.",
+    "Summarize percent complete, next milestones, open RAID items.",
+    "Do not rewrite status unless the user confirms a separate update skill."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "project_number",
+    "project_name",
+    "percent_complete",
+    "next_milestones",
+    "open_raid_items"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecSPM",
+    "plan": "plan_project_prep"
+  },
+  "structuredInputs": false,
+  "priority": 2,
+  "eval": {
+    "prompts": [
+      "Prep the RAID and status summary for Project Atlas before the steering call.",
+      "What is the percent complete and next milestones for PRJ0010023?",
+      "Pull open risks, assumptions, issues, and dependencies for the Phoenix rollout."
+    ]
+  }
+}

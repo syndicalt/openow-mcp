@@ -1,0 +1,12 @@
+{
+  "name": "me-work-caps",
+  "description": "My-work capability smoke: sn.me.work dispatches read-only with no inputs, no writes.",
+  "steps": [
+    {
+      "tool": "dispatch_readonly",
+      "args": { "skillId": "sn.me.work", "inputs": {} },
+      "expectOk": true,
+      "expectNoWrite": true
+    }
+  ]
+}

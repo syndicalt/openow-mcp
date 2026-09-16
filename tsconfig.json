@@ -16,6 +16,7 @@
     "baseUrl": ".",
     "paths": {
       "@open-now/contracts": ["packages/contracts/src/index.ts"],
+      "@open-now/skill-docs": ["packages/skill-docs/index.ts"],
       "@open-now/mcp-server": ["packages/mcp-server/src/index.ts"],
       "@open-now/client-lib": ["packages/client-lib/src/index.ts"]
     }

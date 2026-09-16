@@ -1,0 +1,74 @@
+{
+  "$schema": "open-now/skill-doc/v1",
+  "id": "sn.csm.case.update",
+  "name": "Update or escalate a case",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "Customer service agent",
+  "intent": "Notes, state transitions, and escalation through CSM playbooks / Flows.",
+  "inputs": {
+    "case_number": {
+      "type": "record_number",
+      "required": true,
+      "description": "CSM case number, e.g. CASE0010001."
+    },
+    "mode": {
+      "type": "enum",
+      "required": true,
+      "enum": [
+        "note",
+        "comment",
+        "escalate"
+      ],
+      "description": "note = internal work note; comment = customer-visible comment; escalate = published CSM escalation path."
+    },
+    "body": {
+      "type": "string",
+      "required": true,
+      "description": "Text for the note, comment, or escalation justification."
+    }
+  },
+  "tablesRead": [
+    "sn_customerservice_case",
+    "sys_hub_flow"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "update_owned",
+  "procedure": [
+    "Load by number. Confirm write.",
+    "Customer-visible comments confirm. Escalation uses the published path only."
+  ],
+  "sideEffects": [
+    "Case journal and allowed case fields are written after confirmation; escalation invokes the published CSM playbook / Flow."
+  ],
+  "returns": [
+    "case_number",
+    "state",
+    "comment",
+    "escalation"
+  ],
+  "relatedSkills": [
+    "sn.csm.case.briefing"
+  ],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecCSM",
+    "plan": "plan_case_update",
+    "apply": "apply_case_update"
+  },
+  "structuredInputs": false,
+  "priority": 2,
+  "policy": {
+    "requireDescribe": true,
+    "autoApply": true
+  },
+  "eval": {
+    "prompts": [
+      "Add a customer-visible comment to CASE0010042: 'We are shipping the replacement today.'",
+      "Log an internal note on case CASE0010042 about the root cause we just found.",
+      "Escalate CASE0010042 — the customer is not responding and the service is down."
+    ]
+  }
+}

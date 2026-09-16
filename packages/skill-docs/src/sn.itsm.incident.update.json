@@ -1,0 +1,86 @@
+{
+  "id": "sn.itsm.incident.update",
+  "name": "Add work notes, comments, or resolve",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "fulfiller",
+  "intent": "The everyday mutation path. Keep it boring and strict so the model does not invent state transitions.",
+  "inputs": {
+    "incident_number": {
+      "type": "record_number",
+      "required": true,
+      "description": "Incident number to update"
+    },
+    "mode": {
+      "type": "enum",
+      "required": false,
+      "default": "work_note",
+      "enum": [
+        "comment",
+        "work_note",
+        "resolve"
+      ],
+      "description": "comment writes a customer-visible comment; work_note writes an internal work note; resolve closes the incident"
+    },
+    "comment": {
+      "type": "string",
+      "required": false,
+      "description": "Text to post as a comment or work note"
+    },
+    "resolution_code": {
+      "type": "string",
+      "required": false,
+      "description": "Required for resolve mode"
+    },
+    "resolution_notes": {
+      "type": "string",
+      "required": false,
+      "description": "Required for resolve mode"
+    }
+  },
+  "tablesRead": [
+    "incident"
+  ],
+  "tablesWritten": [
+    "incident"
+  ],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "update_owned",
+  "procedure": [
+    "Load by number. Confirm the user can write.",
+    "Mode comment: writes comments (customer visible). Mode work_note: writes work_notes. Mode resolve: requires resolution_code + resolution_notes; sets state to Resolved only if Data Policy allows (no open children, required fields present).",
+    "Refuse close from this skill. Close is a separate manager path or a Flow.",
+    "Show the exact string that will be posted. On confirm, patch.",
+    "Return new state, journal snippet, remaining SLA."
+  ],
+  "sideEffects": [
+    "posts a comment or work note on the incident; on resolve sets state, resolved_at, and resolution fields"
+  ],
+  "returns": [
+    "new_state",
+    "journal_snippet",
+    "remaining_sla"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecITSM",
+    "plan": "plan_incident_update",
+    "apply": "apply_incident_update"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "policy": {
+    "requireDescribe": true,
+    "autoApply": true
+  },
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Add a work note to INC0012345: we rebooted the server.",
+      "Resolve INC0012345, root cause was a stale DNS record.",
+      "Comment on INC0012345 that the fix is deployed."
+    ]
+  }
+}

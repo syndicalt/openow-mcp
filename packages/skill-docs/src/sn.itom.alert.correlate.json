@@ -1,0 +1,69 @@
+{
+  "id": "sn.itom.alert.correlate",
+  "name": "Correlate alerts to incident / CI",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "SRE / operations",
+  "intent": "Bind an alert to the correct CI and open incident without creating duplicates.",
+  "inputs": {
+    "alert_number": {
+      "type": "record_number",
+      "required": true,
+      "description": "Event Management alert number"
+    },
+    "ci": {
+      "type": "string",
+      "required": false,
+      "description": "CI name to resolve via sn.cmdb.ci.find"
+    }
+  },
+  "tablesRead": [
+    "em_alert",
+    "incident",
+    "cmdb_ci"
+  ],
+  "tablesWritten": [
+    "em_alert",
+    "incident"
+  ],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "update_shared",
+  "procedure": [
+    "Resolve CI with sn.cmdb.ci.find.",
+    "If an open incident exists on that CI/service, attach / work-note rather than open a second incident.",
+    "Only open a new incident after confirm."
+  ],
+  "sideEffects": [
+    "writes alert-incident correlation fields; optionally creates a new incident through the triage skill"
+  ],
+  "returns": [
+    "alert_number",
+    "incident_number"
+  ],
+  "relatedSkills": [
+    "sn.cmdb.ci.find",
+    "sn.itsm.incident.triage"
+  ],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecITOM",
+    "plan": "plan_alert_correlate",
+    "apply": "apply_alert_correlate"
+  },
+  "structuredInputs": false,
+  "featureDeps": [
+    "Event Management"
+  ],
+  "policy": {
+    "requireDescribe": true
+  },
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Correlate alert ALRT0001234 to its incident.",
+      "Attach this alert to the existing incident.",
+      "Link alert ALRT0001234 to the CI db-prod-07."
+    ]
+  }
+}

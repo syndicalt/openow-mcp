@@ -1,0 +1,98 @@
+{
+  "name": "sn_headless",
+  "scope": "sn_headless",
+  "version": "0.1.0",
+  "description": "Open Now headless runtime: skill registry, audit, discover index, and the trusted execution surface for ServiceNow skills.",
+  "tables": [
+    {
+      "name": "sn_headless_skill",
+      "label": "Headless Skill",
+      "extends": "sys_metadata",
+      "fields": [
+        { "name": "id", "label": "Skill ID", "type": "string", "max_length": 128 },
+        { "name": "name", "label": "Name", "type": "string", "max_length": 128 },
+        { "name": "version", "label": "Version", "type": "string", "max_length": 16 },
+        { "name": "status", "label": "Status", "type": "choice", "choice_values": ["draft", "ga", "deprecated"] },
+        { "name": "persona", "label": "Persona", "type": "string", "max_length": 128 },
+        { "name": "intent", "label": "Intent", "type": "text" },
+        { "name": "inputs_json", "label": "Inputs", "type": "json" },
+        { "name": "tables_read", "label": "Tables read", "type": "string", "max_length": 4000 },
+        { "name": "tables_written", "label": "Tables written", "type": "string", "max_length": 4000 },
+        { "name": "roles_any_of", "label": "Roles any of", "type": "string", "max_length": 4000 },
+        { "name": "roles_all_of", "label": "Roles all of", "type": "string", "max_length": 4000 },
+        { "name": "confirmation", "label": "Confirmation", "type": "choice", "choice_values": ["read", "update_owned", "update_shared", "create", "approve", "execute", "deploy", "restricted"] },
+        { "name": "procedure", "label": "Procedure", "type": "text" },
+        { "name": "side_effects", "label": "Side effects", "type": "text" },
+        { "name": "returns_json", "label": "Returns", "type": "json" },
+        { "name": "related_skills", "label": "Related skills", "type": "string", "max_length": 4000 },
+        { "name": "executable", "label": "Executable", "type": "choice", "choice_values": ["script_include", "flow_action", "now_assist", "raw"] },
+        { "name": "executable_ref", "label": "Executable ref", "type": "string", "max_length": 256 },
+        { "name": "doc_json", "label": "Full skill document", "type": "json" },
+        { "name": "active", "label": "Active", "type": "boolean" },
+        { "name": "doc_version", "label": "Doc version", "type": "string", "max_length": 16 }
+      ],
+      "acls": [
+        { "operation": "read", "grant": "true" },
+        { "operation": "write", "grant": "admin" },
+        { "operation": "create", "grant": "admin" },
+        { "operation": "delete", "grant": "admin" }
+      ]
+    },
+    {
+      "name": "sn_headless_run",
+      "label": "Headless Skill Run",
+      "extends": "sys_metadata",
+      "fields": [
+        { "name": "request_id", "label": "Request ID", "type": "string", "max_length": 64 },
+        { "name": "skill_id", "label": "Skill ID", "type": "string", "max_length": 128 },
+        { "name": "skill_version", "label": "Skill version", "type": "string", "max_length": 16 },
+        { "name": "user", "label": "User", "type": "reference", "reference_table": "sys_user" },
+        { "name": "client_app", "label": "Client app", "type": "string", "max_length": 128 },
+        { "name": "inputs_hash", "label": "Inputs hash", "type": "string", "max_length": 32 },
+        { "name": "tables_touched", "label": "Tables touched", "type": "string", "max_length": 4000 },
+        { "name": "record_numbers", "label": "Record numbers", "type": "string", "max_length": 4000 },
+        { "name": "query_hash", "label": "Query hash", "type": "string", "max_length": 32 },
+        { "name": "outcome", "label": "Outcome", "type": "choice", "choice_values": ["ok", "pending", "applied", "denied", "unsupported", "error"] },
+        { "name": "error", "label": "Error", "type": "string", "max_length": 4000 },
+        { "name": "latency_ms", "label": "Latency ms", "type": "integer" },
+        { "name": "token_app", "label": "Token app", "type": "string", "max_length": 128 },
+        { "name": "result_summary", "label": "Result summary", "type": "text" },
+        { "name": "confirmed", "label": "Confirmed", "type": "boolean" }
+      ],
+      "acls": [
+        {
+          "operation": "read",
+          "grant": "script: current.user == gs.getUserID() || gs.hasRole('security_admin')"
+        },
+        { "operation": "write", "grant": "admin" },
+        { "operation": "create", "grant": "admin" },
+        { "operation": "delete", "grant": "admin" }
+      ]
+    },
+    {
+      "name": "sn_headless_index",
+      "label": "Headless Discover Index",
+      "extends": "sys_metadata",
+      "fields": [
+        { "name": "entity_type", "label": "Entity type", "type": "choice", "choice_values": ["skill", "table", "flow", "raw_op"] },
+        { "name": "entity_id", "label": "Entity ID", "type": "string", "max_length": 128 },
+        { "name": "term", "label": "Term", "type": "string", "max_length": 128 },
+        { "name": "weight", "label": "Weight", "type": "integer" }
+      ],
+      "acls": [
+        { "operation": "read", "grant": "true" },
+        { "operation": "write", "grant": "admin" },
+        { "operation": "create", "grant": "admin" },
+        { "operation": "delete", "grant": "admin" }
+      ]
+    }
+  ],
+  "resources": [
+    { "name": "discover", "httpMethod": "GET", "path": "discover", "scriptFile": "rest/discover.js" },
+    { "name": "describe", "httpMethod": "GET", "path": "skills/{skillId}", "scriptFile": "rest/describe.js" },
+    { "name": "invoke", "httpMethod": "POST", "path": "skills/{skillId}/invoke", "scriptFile": "rest/invoke.js" },
+    { "name": "raw", "httpMethod": "POST", "path": "raw", "scriptFile": "rest/raw.js" },
+    { "name": "run", "httpMethod": "GET", "path": "runs/{requestId}", "scriptFile": "rest/run.js" },
+    { "name": "import", "httpMethod": "POST", "path": "import", "scriptFile": "rest/import.js" }
+  ]
+}

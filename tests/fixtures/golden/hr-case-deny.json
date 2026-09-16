@@ -1,0 +1,13 @@
+{
+  "name": "hr-case-deny",
+  "description": "§8.4 case 4: HR case asked by an itil user without sn_hr_core.case_writer → denied in-band, no write, no HR query (mock user roles: [\"itil\"]).",
+  "steps": [
+    {
+      "tool": "dispatch_readonly",
+      "args": { "skillId": "sn.hrsd.case.handle", "inputs": { "case_number": "HRC0010001" } },
+      "expectOk": true,
+      "expectOutcome": "denied",
+      "expectNoWrite": true
+    }
+  ]
+}

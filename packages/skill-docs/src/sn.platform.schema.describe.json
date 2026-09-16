@@ -1,0 +1,61 @@
+{
+  "$schema": "open-now/skill-doc/v1",
+  "id": "sn.platform.schema.describe",
+  "name": "Describe a table, field, or ACL",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "Builder / admin",
+  "intent": "The describe half of Headless 360 for ServiceNow metadata. Coding agents use this before they write a query.",
+  "inputs": {
+    "table": {
+      "type": "string",
+      "required": true,
+      "description": "Table name, e.g. incident or sys_script_include."
+    },
+    "field": {
+      "type": "string",
+      "required": false,
+      "description": "Field name on the table; omit for table-level metadata."
+    }
+  },
+  "tablesRead": [
+    "sys_db_object",
+    "sys_dictionary",
+    "sys_security_acl"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Return label, name, extends, audit flags, attributes for a table.",
+    "For a field: type, reference, mandatory, default, attributes, read-only.",
+    "For ACLs: operation, roles, condition present (yes/no), script present (yes/no) — not the full script body unless the user has admin and asks."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "object_kind",
+    "label",
+    "name",
+    "extends",
+    "audit_flags",
+    "attributes",
+    "field",
+    "acl"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecPlatform",
+    "plan": "plan_schema_describe"
+  },
+  "structuredInputs": false,
+  "priority": 2,
+  "eval": {
+    "prompts": [
+      "Describe the incident table before I write a query against it.",
+      "What is the type, reference, and mandatory flag for change_request.close_code?",
+      "Who can read sys_user, and do those ACLs have a condition or script?"
+    ]
+  }
+}

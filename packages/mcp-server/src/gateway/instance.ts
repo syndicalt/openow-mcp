@@ -1,0 +1,99 @@
+import type {
+  AuditRun,
+  DescribePayload,
+  DiscoverResult,
+  FocusedPayload,
+  InvokeRequest,
+  InvokeResponse,
+  RawRequest,
+} from "@open-now/contracts";
+import { GatewayError, type SnowGateway } from "./gateway.js";
+
+export interface InstanceGatewayOptions {
+  /** e.g. https://dev123456.service-now.com (no trailing slash). */
+  baseUrl: string;
+  /** Per-request token source; null means unauthenticated (instance rejects). */
+  tokenProvider?: () => Promise<string | null>;
+}
+
+const BASE_PATH = "/api/now/sn_headless";
+
+/**
+ * Calls the in-instance sn_headless Scripted REST surface, which owns the
+ * trust model (GlideRecordSecure, ACLs, QueryGuard, audit). The kernel never
+ * touches the Table API directly.
+ */
+export class InstanceGateway implements SnowGateway {
+  constructor(private readonly opts: InstanceGatewayOptions) {}
+
+  async discover(q: string, limit = 10): Promise<DiscoverResult> {
+    const params = new URLSearchParams({ q });
+    if (limit !== 10) params.set("limit", String(limit));
+    return this.call<DiscoverResult>(`${BASE_PATH}/discover?${params.toString()}`);
+  }
+
+  async describe(skillId: string): Promise<DescribePayload> {
+    return this.call<DescribePayload>(
+      `${BASE_PATH}/skills/${encodeURIComponent(skillId)}`,
+    );
+  }
+
+  async invoke(req: InvokeRequest): Promise<InvokeResponse> {
+    return this.call<InvokeResponse>(
+      `${BASE_PATH}/skills/${encodeURIComponent(req.skillId)}/invoke`,
+      { method: "POST", body: JSON.stringify(req) },
+    );
+  }
+
+  async raw(req: RawRequest): Promise<FocusedPayload> {
+    return this.call<FocusedPayload>(`${BASE_PATH}/raw`, {
+      method: "POST",
+      body: JSON.stringify(req),
+    });
+  }
+
+  async getRun(requestId: string): Promise<AuditRun | undefined> {
+    return this.call<AuditRun>(
+      `${BASE_PATH}/runs/${encodeURIComponent(requestId)}`,
+    );
+  }
+
+  async close(): Promise<void> {
+    // no persistent resources to release
+  }
+
+  private async call<T>(
+    path: string,
+    init?: { method?: string; body?: string },
+  ): Promise<T> {
+    const headers: Record<string, string> = {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    };
+    const token = await this.opts.tokenProvider?.();
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    let res: Response;
+    try {
+      res = await fetch(`${this.opts.baseUrl}${path}`, {
+        method: init?.method ?? "GET",
+        headers,
+        body: init?.body,
+      });
+    } catch (err) {
+      throw new GatewayError(
+        null,
+        `cannot reach ServiceNow at ${this.opts.baseUrl}: ${(err as Error).message}`,
+      );
+    }
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new GatewayError(
+        res.status,
+        `ServiceNow returned ${res.status} for ${path}${body ? `: ${body.slice(0, 500)}` : ""}`,
+        body,
+      );
+    }
+    return (await res.json()) as T;
+  }
+}

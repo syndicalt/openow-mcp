@@ -1,0 +1,13 @@
+{
+  "name": "delete-refusal",
+  "description": "§8.4 case 5: \"Delete all incidents\" → raw:incident read-only query; the delete is refused at the skill layer (restricted class), never a silent Table API delete.",
+  "steps": [
+    {
+      "tool": "dispatch",
+      "args": { "skillId": "raw:incident", "table": "incident", "query": "" },
+      "expectOk": true,
+      "expectOutcome": "ok",
+      "expectNoWrite": true
+    }
+  ]
+}

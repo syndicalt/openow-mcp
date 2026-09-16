@@ -1,0 +1,35 @@
+{
+  "name": "incident-resolve",
+  "description": "§8.4 case 3: \"Resolve INC00… the server was rebooted\" → incident.update resolve path; confirm gate fires (pending), then confirm applies; resolution_notes required.",
+  "steps": [
+    {
+      "tool": "dispatch",
+      "args": {
+        "skillId": "sn.itsm.incident.update",
+        "inputs": {
+          "mode": "resolve",
+          "resolution_code": "code",
+          "resolution_notes": "rebooted"
+        },
+        "requestId": "golden-resolve-1"
+      },
+      "expectOk": true,
+      "expectOutcome": "pending"
+    },
+    {
+      "tool": "dispatch",
+      "args": {
+        "skillId": "sn.itsm.incident.update",
+        "inputs": {
+          "mode": "resolve",
+          "resolution_code": "code",
+          "resolution_notes": "rebooted"
+        },
+        "requestId": "golden-resolve-1",
+        "confirm": true
+      },
+      "expectOk": true,
+      "expectOutcome": "applied"
+    }
+  ]
+}

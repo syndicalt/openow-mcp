@@ -1,0 +1,62 @@
+{
+  "id": "sn.cmdb.ci.blast_radius",
+  "name": "Relationship walk / blast radius",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "change, incident, SRE",
+  "intent": "Answer \"what breaks if this CI changes\" without dumping the entire CMDB into context.",
+  "inputs": {
+    "ci": {
+      "type": "string",
+      "required": true,
+      "description": "CI name, serial, IP, or sys_id"
+    },
+    "depth": {
+      "type": "int",
+      "required": false,
+      "default": 2,
+      "min": 1,
+      "max": 3,
+      "description": "Relation walk depth; 3 only for application services"
+    }
+  },
+  "tablesRead": [
+    "cmdb_rel_ci",
+    "cmdb_ci",
+    "cmdb_ci_service"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Start CI via sn.cmdb.ci.find.",
+    "Walk parent and child relations to a default depth of 2. Allow depth 3 only for application services.",
+    "Always include application services and service offerings the CI belongs to.",
+    "Cap nodes at 50. Return a compact adjacency list plus a one-paragraph blast summary.",
+    "Label stale relations (last discovered older than policy) rather than hiding them."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "adjacency",
+    "blast_summary"
+  ],
+  "relatedSkills": [
+    "sn.cmdb.ci.find"
+  ],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecCMDB",
+    "plan": "plan_ci_blast_radius"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "What breaks if we change db-prod-07?",
+      "Show me the blast radius of the firewall.",
+      "Which services depend on app_sap_prod?"
+    ]
+  }
+}

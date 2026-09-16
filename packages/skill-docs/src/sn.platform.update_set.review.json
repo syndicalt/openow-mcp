@@ -1,0 +1,51 @@
+{
+  "$schema": "open-now/skill-doc/v1",
+  "id": "sn.platform.update_set.review",
+  "name": "Review an update set",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "Builder / release manager",
+  "intent": "Summarize what an update set touches before preview or commit.",
+  "inputs": {
+    "update_set": {
+      "type": "string",
+      "required": true,
+      "description": "Update set name or sys_id, e.g. 'Acme Prod — 2026.09'."
+    }
+  },
+  "tablesRead": [
+    "sys_update_set",
+    "sys_update_xml"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "List customer updates by type and target table/name.",
+    "Flag ACLs, Business Rules, and data records mixed into app changes."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "update_set",
+    "changes_by_type",
+    "flagged_acl_updates",
+    "flagged_business_rules",
+    "flagged_data_records"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecPlatform",
+    "plan": "plan_update_set_review"
+  },
+  "structuredInputs": false,
+  "priority": 2,
+  "eval": {
+    "prompts": [
+      "Review update set 'Acme Prod — 2026.09' before I preview it.",
+      "What does the customer update set touch, and are any ACLs or Business Rules mixed in?",
+      "Summarize the update set I'm about to commit: types, target tables, and data records."
+    ]
+  }
+}

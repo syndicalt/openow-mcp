@@ -1,0 +1,59 @@
+{
+  "id": "sn.itsm.change.cab_prep",
+  "name": "Prepare a CAB packet",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "change manager",
+  "intent": "One artifact a CAB chair can open: the change, its conflicts, approvals outstanding, implementation plan, and who speaks.",
+  "inputs": {
+    "change_numbers": {
+      "type": "array",
+      "required": false,
+      "maxItems": 25,
+      "description": "Change numbers to prepare; omit when using agenda_date"
+    },
+    "agenda_date": {
+      "type": "string",
+      "required": false,
+      "description": "CAB agenda date to select changes"
+    }
+  },
+  "tablesRead": [
+    "change_request",
+    "change_task",
+    "sysapproval_approver",
+    "task_ci"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Input: CAB agenda date or a list of change numbers.",
+    "For each change run sn.itsm.change.assess_risk.",
+    "List open approvals and change tasks not Closed.",
+    "Return a packet object suitable for generative UI or a slide export. Do not invent attendance."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "packet"
+  ],
+  "relatedSkills": [
+    "sn.itsm.change.assess_risk"
+  ],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecITSM",
+    "plan": "plan_change_cab_prep"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Prep CHG0031842 for CAB.",
+      "Build the CAB packet for Thursday's agenda.",
+      "What do we need for CAB on CHG0031842?"
+    ]
+  }
+}

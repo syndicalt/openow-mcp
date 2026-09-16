@@ -1,0 +1,81 @@
+{
+  "id": "sn.itsm.change.draft",
+  "name": "Draft a change from a template",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "change requester / implementer",
+  "intent": "Open a change the CAB will not bounce for missing fields. Prefer standard changes when a template matches.",
+  "inputs": {
+    "summary": {
+      "type": "string",
+      "required": true,
+      "maxLength": 200,
+      "description": "What the change does"
+    },
+    "ci_query": {
+      "type": "string",
+      "required": false,
+      "description": "CI name/hostname/serial to resolve via sn.cmdb.ci.find"
+    },
+    "type": {
+      "type": "enum",
+      "required": false,
+      "default": "normal",
+      "enum": [
+        "standard",
+        "normal"
+      ],
+      "description": "standard if a published standard-change template matches; otherwise normal"
+    }
+  },
+  "tablesRead": [
+    "change_request",
+    "change_task",
+    "task_ci",
+    "sc_cat_item"
+  ],
+  "tablesWritten": [
+    "change_request",
+    "change_task",
+    "task_ci"
+  ],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "create",
+  "procedure": [
+    "Classify type: standard if a published standard-change template matches the stated work; otherwise normal. Emergency is a separate, role-gated skill path.",
+    "Resolve CIs via sn.cmdb.ci.find. Require at least one CI for anything that is not a documentation-only change.",
+    "Fill planned start/end from the maintenance window on the CI or service offering if present.",
+    "Copy template implementation / backout / test plans. Mark them as template-sourced so a human edits them.",
+    "On confirm, insert change_request, task_ci, and template change_task records. Return number and a missing-field list the user must still complete."
+  ],
+  "sideEffects": [
+    "inserts change_request, task_ci, and template change_task records"
+  ],
+  "returns": [
+    "change_number",
+    "missing_fields"
+  ],
+  "relatedSkills": [
+    "sn.cmdb.ci.find"
+  ],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecITSM",
+    "plan": "plan_change_draft",
+    "apply": "apply_change_draft"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "policy": {
+    "requireDescribe": true
+  },
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Draft a change to patch db-prod-07.",
+      "Open a normal change for the network switch firmware upgrade.",
+      "Create a change from the standard template for server reboots."
+    ]
+  }
+}

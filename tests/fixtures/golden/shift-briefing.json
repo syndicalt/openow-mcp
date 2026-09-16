@@ -1,0 +1,13 @@
+{
+  "name": "shift-briefing",
+  "description": "§8.4 case 1: \"What should I work first this morning?\" → sn.itsm.shift.briefing only, read-only, no writes.",
+  "steps": [
+    {
+      "tool": "dispatch_readonly",
+      "args": { "skillId": "sn.itsm.shift.briefing", "inputs": {} },
+      "expectOk": true,
+      "expectOutcome": "ok",
+      "expectNoWrite": true
+    }
+  ]
+}

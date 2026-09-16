@@ -1,0 +1,68 @@
+{
+  "$schema": "open-now/skill-doc/v1",
+  "id": "sn.secops.vuln.prioritize",
+  "name": "VR prioritization with CMDB",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "Vulnerability responder",
+  "intent": "Rank open vulnerable items by exploitability and blast radius, not by raw CVE count.",
+  "inputs": {
+    "service": {
+      "type": "string",
+      "required": false,
+      "description": "Application service name or CI sys_id to scope the ranking to."
+    },
+    "limit": {
+      "type": "int",
+      "required": false,
+      "default": 25,
+      "min": 1,
+      "max": 100,
+      "description": "Maximum number of ranked vulnerabilities (default 25, hard max 100)."
+    }
+  },
+  "tablesRead": [
+    "sn_vuln_vulnerable_item",
+    "cmdb_ci"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [
+    "sn_vuln"
+  ],
+  "rolesAllOf": [],
+  "confirmation": "restricted",
+  "procedure": [
+    "Require VR roles.",
+    "Join CI criticality and sn.cmdb.ci.blast_radius for the service.",
+    "Return a short ranked list. No mass-close."
+  ],
+  "sideEffects": [
+    "None in the read path; no mass-close."
+  ],
+  "returns": [
+    "service",
+    "count",
+    "ranked_list"
+  ],
+  "relatedSkills": [
+    "sn.cmdb.ci.blast_radius"
+  ],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecSecOps",
+    "plan": "plan_vuln_prioritize",
+    "apply": "apply_vuln_prioritize"
+  },
+  "structuredInputs": true,
+  "priority": 2,
+  "policy": {
+    "requireDescribe": true
+  },
+  "eval": {
+    "prompts": [
+      "Rank the top 10 open vulnerabilities on the customer portal service.",
+      "Which vulnerable items on app_sap_prod should I fix first, weighted by blast radius?",
+      "Show me the open VR items on service 'Self-Service' with exploitability first."
+    ]
+  }
+}

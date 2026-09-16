@@ -1,0 +1,70 @@
+{
+  "id": "sn.itsm.request.fulfill",
+  "name": "Fulfill or approve a request",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "approver or fulfiller",
+  "intent": "Approve or fulfill through the approval and request engines.",
+  "inputs": {
+    "request_number": {
+      "type": "record_number",
+      "required": true,
+      "description": "REQ or RITM number"
+    },
+    "action": {
+      "type": "enum",
+      "required": false,
+      "default": "approve",
+      "enum": [
+        "approve",
+        "reject",
+        "fulfill"
+      ],
+      "description": "Approval decision or fulfill action"
+    }
+  },
+  "tablesRead": [
+    "sc_request",
+    "sc_req_item",
+    "sysapproval_approver"
+  ],
+  "tablesWritten": [
+    "sysapproval_approver",
+    "sc_req_item"
+  ],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "approve",
+  "procedure": [
+    "Load REQ/RITM by number. Show variables, price, requested_for, policy.",
+    "Approve / reject via Approval Engine only. Never patch approval state.",
+    "Fulfill only fields and catalog tasks the item's flow expects."
+  ],
+  "sideEffects": [
+    "records the approval decision via the Approval Engine and updates fulfiller fields on RITM/tasks"
+  ],
+  "returns": [
+    "request_number",
+    "approval_state"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecITSM",
+    "plan": "plan_request_fulfill",
+    "apply": "apply_request_fulfill"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "policy": {
+    "requireDescribe": true
+  },
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Approve REQ0012345.",
+      "Fulfill RITM0012345 for the new laptop.",
+      "Reject the request REQ0012345 and tell me why."
+    ]
+  }
+}

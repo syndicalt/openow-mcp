@@ -1,0 +1,59 @@
+{
+  "id": "sn.itom.alert.triage",
+  "name": "Alert to service impact",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "SRE / operations",
+  "intent": "Turn an Event Management alert into: what service is hurt, whether an incident already exists, and the next operational step.",
+  "inputs": {
+    "alert_number": {
+      "type": "record_number",
+      "required": true,
+      "description": "Event Management alert number or sys_id"
+    }
+  },
+  "tablesRead": [
+    "em_alert",
+    "em_impact",
+    "cmdb_ci",
+    "incident"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Load em_alert by number or sys_id. Include message_key, severity, CI, metric.",
+    "Read impact tree / em_impact if licensed; otherwise approximate via sn.cmdb.ci.blast_radius from the alert CI.",
+    "Find open incidents on the same CI or service in the last 24 hours.",
+    "Recommend: acknowledge, correlate into existing incident, or open new incident via sn.itsm.incident.triage.",
+    "Do not auto-close alerts from this skill."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "service",
+    "incident",
+    "recommendation"
+  ],
+  "relatedSkills": [
+    "sn.cmdb.ci.blast_radius",
+    "sn.itsm.incident.triage"
+  ],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecITOM",
+    "plan": "plan_alert_triage"
+  },
+  "structuredInputs": false,
+  "featureDeps": [
+    "Event Management"
+  ],
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Triage alert ALRT0001234.",
+      "What service is affected by this alert?",
+      "Is there already an incident for alert ALRT0001234?"
+    ]
+  }
+}

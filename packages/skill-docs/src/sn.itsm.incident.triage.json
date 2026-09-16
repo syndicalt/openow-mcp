@@ -1,0 +1,69 @@
+{
+  "id": "sn.itsm.incident.triage",
+  "name": "Triage a new or assigned incident",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "fulfiller",
+  "intent": "Take an incident from New / unclassified to a correctly categorized, prioritized, assigned, CI-linked record with an initial work note.",
+  "inputs": {
+    "incident_number": {
+      "type": "record_number",
+      "required": true,
+      "description": "Incident number to triage"
+    },
+    "ci_hint": {
+      "type": "string",
+      "required": false,
+      "description": "Hostname or service name to resolve CI context"
+    }
+  },
+  "tablesRead": [
+    "incident",
+    "cmdb_ci",
+    "incident_problem",
+    "kb_knowledge"
+  ],
+  "tablesWritten": [
+    "incident"
+  ],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "update_shared",
+  "procedure": [
+    "Load the incident by number. If 403, stop and say so.",
+    "Run sn.itsm.incident.similar and sn.kb.answer against short_description + description + CI class.",
+    "If the caller provided a hostname or service name, run sn.cmdb.ci.find. Propose cmdb_ci, business_service, assignment_group from CI support group — do not overwrite a human assignment without confirm.",
+    "Propose category, subcategory, impact, urgency (hence priority), assignment_group. Show the diff.",
+    "On confirm, patch only the proposed fields and insert a work note that cites similar tickets and the CI match method (name / serial / reconciliation id)."
+  ],
+  "sideEffects": [
+    "posts a work note on the incident citing similar tickets and the CI match method"
+  ],
+  "returns": [
+    "diff"
+  ],
+  "relatedSkills": [
+    "sn.itsm.incident.similar",
+    "sn.kb.answer",
+    "sn.cmdb.ci.find"
+  ],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecITSM",
+    "plan": "plan_incident_triage",
+    "apply": "apply_incident_triage"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "policy": {
+    "requireDescribe": true
+  },
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Triage INC0012345 that just came in.",
+      "Classify and prioritize this incident, INC0012345.",
+      "My server db-prod-07 is down, triage the incident."
+    ]
+  }
+}

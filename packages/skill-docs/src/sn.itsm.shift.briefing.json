@@ -1,0 +1,53 @@
+{
+  "id": "sn.itsm.shift.briefing",
+  "name": "Shift start / queue briefing",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "fulfiller, manager",
+  "intent": "Give the user a plan for the next shift: what aged overnight, what is at risk against SLA, what is unassigned in their groups, what major incidents are open, what changes go live today that touch CIs they support.",
+  "inputs": {},
+  "tablesRead": [
+    "incident",
+    "task_sla",
+    "sys_user_grmember",
+    "cmdb_ci"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Resolve the user's groups via sys_user_grmember. Do not trust a group name typed in chat without resolving it.",
+    "Query open incidents where assignment_group IN those groups OR assigned_to = me. Fields: number, short_description, priority, state, assigned_to, assignment_group, cmdb_ci, SLA due.",
+    "Join task_sla where has_breached = false and business_percentage >= 75. Sort by time-to-breach.",
+    "List changes in implement or scheduled for today whose CIs intersect the user's support CIs (use sn.cmdb.ci.blast_radius internally if needed).",
+    "Return a briefing object: at_risk[], unassigned[], mine[], majors[], changes_today[], recommended first three actions."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "at_risk",
+    "unassigned",
+    "mine",
+    "majors",
+    "changes_today",
+    "first_actions"
+  ],
+  "relatedSkills": [
+    "sn.cmdb.ci.blast_radius"
+  ],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecITSM",
+    "plan": "plan_shift_briefing"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "What should I work first this morning?",
+      "Give me my shift briefing before I log in.",
+      "What aged overnight and what is about to breach SLA?"
+    ]
+  }
+}

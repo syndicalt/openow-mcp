@@ -1,0 +1,60 @@
+{
+  "id": "sn.itsm.incident.similar",
+  "name": "Find similar incidents and known errors",
+  "version": "1.0.0",
+  "status": "ga",
+  "persona": "fulfiller",
+  "intent": "Return the smallest set of prior records that would change what a fulfiller does next.",
+  "inputs": {
+    "query": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100,
+      "description": "Incident number or free text describing the incident"
+    },
+    "ci": {
+      "type": "string",
+      "required": false,
+      "description": "Optional CI name to prioritize CI-first search"
+    }
+  },
+  "tablesRead": [
+    "incident",
+    "problem",
+    "kb_knowledge",
+    "cmdb_ci"
+  ],
+  "tablesWritten": [],
+  "rolesAnyOf": [],
+  "rolesAllOf": [],
+  "confirmation": "read",
+  "procedure": [
+    "Inputs: incident number or free text + optional CI.",
+    "Search open and recent-closed incidents by CI first, then by short_description keywords, then by assignment group. Prefer same cmdb_ci over text similarity.",
+    "Search problem where known_error = true and CI or related CI matches.",
+    "Search published kb_knowledge in the IT knowledge base; drop retired articles.",
+    "Return top 5 incidents, top 3 problems, top 3 articles, each with a one-line why-it-matched. No full description dumps."
+  ],
+  "sideEffects": [],
+  "returns": [
+    "incidents",
+    "problems",
+    "articles"
+  ],
+  "relatedSkills": [],
+  "executable": {
+    "type": "script_include",
+    "ref": "ExecITSM",
+    "plan": "plan_incident_similar"
+  },
+  "structuredInputs": false,
+  "featureDeps": [],
+  "priority": 1,
+  "eval": {
+    "prompts": [
+      "Have we seen anything like INC0012345 before?",
+      "Find similar incidents for this DB outage.",
+      "Is there a known error or KB article for this?"
+    ]
+  }
+}

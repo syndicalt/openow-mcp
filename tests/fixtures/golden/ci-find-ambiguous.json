@@ -1,0 +1,12 @@
+{
+  "name": "ci-find-ambiguous",
+  "description": "CI name 'web' is ambiguous (fixture returns ambiguous:true with multiple candidates) — the call still succeeds (expectOk true); the client must disambiguate, not the channel.",
+  "steps": [
+    {
+      "tool": "dispatch_readonly",
+      "args": { "skillId": "sn.cmdb.ci.find", "inputs": { "name": "web" } },
+      "expectOk": true,
+      "expectNoWrite": true
+    }
+  ]
+}
