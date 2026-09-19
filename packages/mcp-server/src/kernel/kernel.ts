@@ -7,6 +7,10 @@ import type {
   RawRequest,
 } from "@open-now/contracts";
 import type { SnowGateway } from "../gateway/gateway.js";
+import type { JudgmentClient } from "../judgment/client.js";
+import type { Journal } from "../judgment/journal.js";
+import { rerankDiscover } from "../judgment/rank-discover.js";
+import { judgePending } from "../judgment/confirm-policy.js";
 
 export type KernelToolName =
   | "discover"
@@ -27,6 +31,9 @@ export interface KernelResult {
 export interface KernelOptions {
   requireDescribe?: boolean;
   clientApp?: string;
+  /** Internal System One client. Undefined = ranking/confirm advice off (eval/goldens). */
+  judgment?: JudgmentClient;
+  journal?: Journal;
 }
 
 const RAW_PREFIX = "raw:";
@@ -36,6 +43,9 @@ const RAW_PREFIX = "raw:";
  * per-session "described" set used to enforce the describe-before-write rule.
  * All capability work is delegated to the gateway (in production the instance
  * runtime); this class owns protocol only.
+ *
+ * Judgment (Jev / local System One) is not a fifth tool. It reranks discover
+ * and annotates pending diffs. It never writes.
  */
 export class Kernel {
   private readonly described = new Map<string, Set<string>>();
@@ -83,7 +93,15 @@ export class Kernel {
   private async discover(args: Record<string, unknown>): Promise<KernelResult> {
     const q = str(args.q) || str(args.query);
     const limit = clampInt(args.limit, 10, 1, 25);
-    const result = await this.gateway.discover(q, limit);
+    let result = await this.gateway.discover(q, limit);
+    if (this.opts.judgment && result.results.length > 0 && q) {
+      result = await rerankDiscover(this.opts.judgment, q, result);
+      this.opts.journal?.append({
+        type: "skill.discovered",
+        query: q,
+        ids: result.results.map((r) => r.id),
+      });
+    }
     if (result.results.length === 0) {
       return {
         ok: true,
@@ -91,9 +109,11 @@ export class Kernel {
         data: result,
       };
     }
-    const lines = result.results.map(
-      (r) => `- ${r.id} [${r.kind}] score=${r.score} — ${r.why}`,
-    );
+    const lines = result.results.map((r) => {
+      const gate = r.gate ? ` gate=${r.gate}` : "";
+      const conf = r.confidence != null ? ` conf=${r.confidence.toFixed(2)}` : "";
+      return `- ${r.id} [${r.kind}] score=${Number(r.score).toFixed(2)}${conf}${gate} — ${r.why}`;
+    });
     return {
       ok: true,
       text: `Matching operations (${result.results.length}):\n${lines.join("\n")}`,
@@ -173,7 +193,7 @@ export class Kernel {
         data: res,
       };
     }
-    return this.formatPreview(skillId, res);
+    return this.formatPreview(skillId, res, inputs);
   }
 
   private async dispatch(
@@ -212,8 +232,14 @@ export class Kernel {
         data: res,
       };
     }
-    if (res.outcome === "pending") return this.formatPreview(skillId, res);
+    if (res.outcome === "pending") return this.formatPreview(skillId, res, inputs, requestId);
     if (res.outcome === "applied") {
+      this.opts.journal?.append({
+        type: "dispatch.applied",
+        skillId,
+        requestId,
+        auditId: res.auditId,
+      });
       const numbers = res.focusedPayload?.number ?? res.focusedPayload?.record_numbers;
       return {
         ok: true,
@@ -263,7 +289,12 @@ export class Kernel {
     };
   }
 
-  private formatPreview(skillId: string, res: InvokeResponse): KernelResult {
+  private async formatPreview(
+    skillId: string,
+    res: InvokeResponse,
+    inputs: Record<string, unknown> = {},
+    requestId?: string,
+  ): Promise<KernelResult> {
     const parts: string[] = [`Pending confirmation — ${skillId}`];
     if (res.diff?.length) {
       for (const d of res.diff) {
@@ -279,10 +310,42 @@ export class Kernel {
     if (res.missingFields?.length) {
       parts.push(`Missing inputs required: ${res.missingFields.join(", ")}`);
     }
-    parts.push(
-      `Call dispatch with confirm:true and the same requestId to apply.`,
-    );
-    return { ok: true, text: parts.join("\n"), data: res };
+
+    let judgment: Awaited<ReturnType<typeof judgePending>> | undefined;
+    if (this.opts.judgment) {
+      judgment = await judgePending({
+        judgment: this.opts.judgment,
+        confirmation: res.confirmation,
+        skillId,
+        inputs,
+        diff: res.diff,
+        draft: res.draft,
+      });
+      parts.push(
+        `Judgment: advice=${judgment.advice} intent=${judgment.intent.toFixed(2)} blast=${judgment.blast.toFixed(2)} missing=${judgment.missingSubstance.toFixed(2)}`,
+      );
+      if (judgment.advice === "refuse") {
+        parts.push("Refuse: do not confirm — intent or substance is below floor. Instance did not write.");
+      } else if (judgment.advice === "auto_ok") {
+        parts.push("auto_ok: owned + high intent + low blast. Kernel still waits for confirm:true (ConfirmGate owns apply).");
+      }
+      this.opts.journal?.append({
+        type: "dispatch.pending",
+        skillId,
+        requestId,
+        advice: judgment.advice,
+      });
+      this.opts.journal?.append({
+        type: "jev.answered",
+        pack: "open-now.dispatch.confirm",
+        model: "judgment",
+        elapsedMs: judgment.elapsedMs,
+        answers: judgment.answers,
+      });
+    }
+
+    parts.push(`Call dispatch with confirm:true and the same requestId to apply.`);
+    return { ok: true, text: parts.join("\n"), data: { ...res, judgment } };
   }
 
   private markDescribed(sessionId: string, skillId: string): void {

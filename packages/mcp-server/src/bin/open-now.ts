@@ -4,6 +4,7 @@ import { allSkillDocs } from "@open-now/skill-docs";
 import { loadConfig } from "../config.js";
 import { InstanceGateway } from "../gateway/instance.js";
 import { createKernel } from "../kernel/kernel.js";
+import { kernelOptsFromConfig } from "../judgment/from-config.js";
 import { SessionStore } from "../auth/session-store.js";
 import { createMcpServer } from "../server/mcp.js";
 import { createHttpServer } from "../server/http.js";
@@ -19,6 +20,9 @@ Environment:
   OPEN_NOW_PORT           http port (default 8787)
   OPEN_NOW_DOMAIN         expose sn.<domain>.* skills as tools instead of the kernel
   OPEN_NOW_OAUTH_CLIENT_ID  OAuth application registry client id (http mode)
+  OPEN_NOW_JUDGMENT         off | local | jev  (internal System One; default off)
+  TYPESAFE_API_KEY          Jev API key when OPEN_NOW_JUDGMENT=jev
+  OPEN_NOW_JOURNAL_PATH     append-only JSONL of judgments + dispatches
 `;
 
 export async function main(): Promise<number> {
@@ -55,7 +59,7 @@ export async function main(): Promise<number> {
     baseUrl: config.instanceUrl,
     tokenProvider: staticToken ? async () => staticToken : undefined,
   });
-  const kernel = createKernel(gateway, { clientApp: "open-now-stdio" });
+  const kernel = createKernel(gateway, kernelOptsFromConfig(config, "open-now-stdio"));
   const server = createMcpServer({
     name: "open-now",
     version: "0.1.0",

@@ -12,6 +12,7 @@ import { InstanceGateway, type InstanceGatewayOptions } from "../gateway/instanc
 import type { SnowGateway } from "../gateway/gateway.js";
 import type { Kernel } from "../kernel/kernel.js";
 import { createKernel } from "../kernel/kernel.js";
+import { kernelOptsFromConfig } from "../judgment/from-config.js";
 import { createMcpServer, type ToolkitOptions } from "./mcp.js";
 
 export interface HttpServerOptions {
@@ -84,7 +85,8 @@ export function createHttpServer(
     });
     const gateway = gatewayFor(sessionId);
     const kernel =
-      opts.createSessionKernel?.(sessionId, gateway) ?? createKernel(gateway, { clientApp: "open-now-http" });
+      opts.createSessionKernel?.(sessionId, gateway) ??
+      createKernel(gateway, kernelOptsFromConfig(config, "open-now-http"));
     const server = createMcpServer({
       name: "open-now",
       version: "0.1.0",
