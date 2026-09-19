@@ -14,8 +14,21 @@ import { GatewayError, type SnowGateway } from "./gateway.js";
 export interface InstanceGatewayOptions {
   /** e.g. https://dev123456.service-now.com (no trailing slash). */
   baseUrl: string;
-  /** Per-request token source; null means unauthenticated (instance rejects). */
+  /** Per-request OAuth/Bearer token source; null means unauthenticated. */
   tokenProvider?: () => Promise<string | null>;
+  /** HTTP Basic for PDI / web-service users. Takes precedence over Bearer. */
+  basic?: { username: string; password: string };
+}
+
+/** Prefer SNOW_USER+SNOW_PASSWORD (PDI basic) over a static bearer token. */
+export function instanceAuthFromEnv(
+  env: NodeJS.ProcessEnv = process.env,
+): Pick<InstanceGatewayOptions, "tokenProvider" | "basic"> {
+  const user = env.SNOW_USER;
+  const password = env.SNOW_PASSWORD;
+  if (user && password) return { basic: { username: user, password } };
+  const token = env.SNOW_ACCESS_TOKEN ?? env.OPEN_NOW_ACCESS_TOKEN;
+  return { tokenProvider: async () => token ?? null };
 }
 
 const BASE_PATH = "/api/now/sn_headless";
@@ -79,8 +92,13 @@ export class InstanceGateway implements SnowGateway {
       Accept: "application/json",
       "Content-Type": "application/json",
     };
-    const token = await this.opts.tokenProvider?.();
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (this.opts.basic) {
+      const raw = `${this.opts.basic.username}:${this.opts.basic.password}`;
+      headers.Authorization = `Basic ${Buffer.from(raw).toString("base64")}`;
+    } else {
+      const token = await this.opts.tokenProvider?.();
+      if (token) headers.Authorization = `Bearer ${token}`;
+    }
 
     let res: Response;
     try {

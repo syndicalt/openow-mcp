@@ -2,27 +2,29 @@ import { afterAll, describe, expect, test } from "bun:test";
 import {
   createKernel,
   InstanceGateway,
+  instanceAuthFromEnv,
   JevClient,
   LocalJudgmentClient,
 } from "@open-now/mcp-server";
 
 /**
- * Kernel + judgment against a real PDI. Requires SNOW_INSTANCE +
- * SNOW_ACCESS_TOKEN (or OPEN_NOW_* aliases). Local engine always;
+ * Kernel + judgment against a real PDI. Requires SNOW_INSTANCE and either
+ * SNOW_USER+SNOW_PASSWORD or SNOW_ACCESS_TOKEN. Local engine always;
  * Jev path runs only when TYPESAFE_API_KEY is set.
  *
  * Prereqs: sn_headless installed and catalog seeded
  * (instance/bootstrap/README.md). Judgment never writes.
  */
 const instance = process.env.SNOW_INSTANCE ?? process.env.OPEN_NOW_INSTANCE_URL;
-const token = process.env.SNOW_ACCESS_TOKEN ?? process.env.OPEN_NOW_ACCESS_TOKEN;
-const run = Boolean(instance && token);
+const hasBasic = Boolean(process.env.SNOW_USER && process.env.SNOW_PASSWORD);
+const hasToken = Boolean(process.env.SNOW_ACCESS_TOKEN ?? process.env.OPEN_NOW_ACCESS_TOKEN);
+const run = Boolean(instance && (hasBasic || hasToken));
 const jevKey = process.env.TYPESAFE_API_KEY;
 
 describe.skipIf(!run)("PDI kernel + judgment", () => {
   const gateway = new InstanceGateway({
     baseUrl: String(instance ?? "").replace(/\/$/, ""),
-    tokenProvider: async () => token!,
+    ...instanceAuthFromEnv(),
   });
 
   afterAll(async () => {
@@ -87,5 +89,5 @@ describe.skipIf(!run)("PDI kernel + judgment", () => {
 });
 
 test("PDI judgment is skipped without instance credentials (sanity)", () => {
-  if (!run) expect(instance && token).toBeFalsy();
+  if (!run) expect(hasBasic || hasToken).toBe(false);
 });
