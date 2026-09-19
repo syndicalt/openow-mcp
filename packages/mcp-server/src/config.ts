@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import type { JudgmentMode } from "./judgment/client.js";
 
 export type Transport = "stdio" | "http";
 
@@ -30,6 +31,13 @@ export interface OpenNowConfig {
   oauth?: OAuthConfig;
   /** Generated wide surface (table/record/script tools). Default: generic (on). */
   toolkit?: ToolkitConfig;
+  /**
+   * Internal System One plane. Default off so goldens/eval stay deterministic.
+   * `local` = offline engine; `jev` = TypeSafe Jev (falls back to local without a key).
+   */
+  judgment?: JudgmentMode;
+  /** Append-only JSONL journal of judgments + dispatches. */
+  journalPath?: string;
 }
 
 export type Env = Record<string, string | undefined>;
@@ -69,6 +77,12 @@ export function loadConfig(
     ? env.OPEN_NOW_TABLE_TOOLS.split(",").map((s) => s.trim()).filter(Boolean)
     : fromFile.toolkit?.tableTools;
 
+  const judgment: JudgmentMode =
+    (env.OPEN_NOW_JUDGMENT as JudgmentMode | undefined) ?? fromFile.judgment ?? "off";
+  if (!["off", "local", "jev"].includes(judgment)) {
+    throw new Error(`OPEN_NOW_JUDGMENT must be off|local|jev, got ${judgment}`);
+  }
+
   return {
     instanceUrl: instanceUrl.replace(/\/$/, ""),
     transport,
@@ -83,6 +97,8 @@ export function loadConfig(
       : fromFile.enabledSkills,
     dbPath: env.OPEN_NOW_DB_PATH ?? fromFile.dbPath,
     toolkit: { mode: toolkitMode, tableTools },
+    judgment,
+    journalPath: env.OPEN_NOW_JOURNAL_PATH ?? fromFile.journalPath,
     oauth: {
       clientId: env.OPEN_NOW_OAUTH_CLIENT_ID ?? fromFile.oauth?.clientId ?? "",
       redirectUri:
