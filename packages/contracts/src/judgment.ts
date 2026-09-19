@@ -81,7 +81,15 @@ export const SystemOneResultSchema = z.object({
   model: z.string(),
   answers: z.record(z.string(), AnswerSchema),
   elapsedMs: z.number().nonnegative().optional(),
-});
+  /** TypeSafe usage envelope — stripped by clients that don't need it. */
+  usage: z
+    .object({
+      input_tokens: z.number().optional(),
+      output_tokens: z.number().optional(),
+    })
+    .passthrough()
+    .optional(),
+}).passthrough();
 export type SystemOneResult = z.infer<typeof SystemOneResultSchema>;
 
 export const DiscoverGateSchema = z.enum(["auto", "pick", "ask"]);
