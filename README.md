@@ -1,10 +1,12 @@
-# Open Now — Headless MCP for ServiceNow
+# Open Now — action kernel of NowOS
 
 Open Now is a headless MCP interface for ServiceNow: a small, stable MCP kernel, a curated skill catalog that encodes how real work is done (ITSM/CMDB/ITOM/SPM/CSM/HRSD/SecOps/platform), a generated toolkit for metadata-driven table/record/script access, and an in-instance runtime (`sn_headless` scoped app) that keeps every read and write inside ServiceNow's ACL, Business Rule, and Data Policy fabric.
 
 **The invariant:** the AI client orchestrates; ServiceNow remains the governed system of action. The kernel is protocol only — all capability, permission, and audit logic runs in the instance as the invoking user. No Table API in the kernel, no service account on the interactive path.
 
-> Design spec: [`docs/spec.md`](docs/spec.md) · Wire contract: [`docs/wire-contract.md`](docs/wire-contract.md) · Implementation plan: [`docs/implementation-plan.md`](docs/implementation-plan.md) · Judgment plane: [`docs/judgment.md`](docs/judgment.md)
+We are building toward **[NowOS](docs/nowos.md)**: composable surfaces *outside* the ServiceNow UI, with this repo as the only mutation path.
+
+> Design spec: [`docs/spec.md`](docs/spec.md) · Wire contract: [`docs/wire-contract.md`](docs/wire-contract.md) · Implementation plan: [`docs/implementation-plan.md`](docs/implementation-plan.md) · Judgment plane: [`docs/judgment.md`](docs/judgment.md) · NowOS: [`docs/nowos.md`](docs/nowos.md)
 
 ---
 
