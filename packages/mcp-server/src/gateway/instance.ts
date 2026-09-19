@@ -34,6 +34,32 @@ export function instanceAuthFromEnv(
 const BASE_PATH = "/api/now/sn_headless";
 
 /**
+ * ServiceNow Scripted REST wraps setBody(x) as `{ result: x }`. Unwrap that
+ * envelope so callers see the kernel contract (DiscoverResult, etc.).
+ */
+export function unwrapScriptedRest(json: unknown): unknown {
+  if (!json || typeof json !== "object") return json;
+  const rec = json as Record<string, unknown>;
+  if (!("result" in rec)) return json;
+  const looksNative =
+    "results" in rec ||
+    "outcome" in rec ||
+    "available" in rec ||
+    "auditId" in rec ||
+    "doc" in rec;
+  if (looksNative) return json;
+  let value: unknown = rec.result;
+  if (typeof value === "string") {
+    try {
+      value = JSON.parse(value) as unknown;
+    } catch {
+      // keep the string
+    }
+  }
+  return value;
+}
+
+/**
  * Calls the in-instance sn_headless Scripted REST surface, which owns the
  * trust model (GlideRecordSecure, ACLs, QueryGuard, audit). The kernel never
  * touches the Table API directly.
@@ -121,6 +147,6 @@ export class InstanceGateway implements SnowGateway {
         body,
       );
     }
-    return (await res.json()) as T;
+    return unwrapScriptedRest(await res.json()) as T;
   }
 }

@@ -43,7 +43,10 @@ Three components, one contract (`packages/contracts`):
 ## Quickstart (PDI or subprod)
 
 1. **Build the app** — `bun run build:app` produces `dist/sn_headless/update-set.xml`.
-2. **Install it** — System Update Sets → Load XML, then activate the `sn_headless` scope. Full PDI walkthrough: [`instance/bootstrap/README.md`](instance/bootstrap/README.md).
+2. **Install it** — either:
+   - **Update set (interactive admin):** System Update Sets → Load XML, then activate the `sn_headless` scope.
+   - **REST installer (web-service-only admin):** `bun run install:instance` with `SNOW_INSTANCE` + `SNOW_USER` + `SNOW_PASSWORD`. Creates global `u_sn_headless_*` tables, script includes, and `/api/now/sn_headless`.
+   Full PDI walkthrough: [`instance/bootstrap/README.md`](instance/bootstrap/README.md).
 3. **Create an OAuth app** in the instance (System OAuth → Application Registry): grant type **Authorization Code**, **PKCE enabled**, redirect URI = your server URL + `/oauth/callback`. Copy the client id.
 4. **Configure the server** (env or `--config file.json`; see [Configuration](#configuration)).
 5. **Seed the catalog** — `bun run seed` (imports all 32 skill documents into the registry; `--dry-run` to preview).

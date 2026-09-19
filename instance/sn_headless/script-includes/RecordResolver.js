@@ -111,7 +111,7 @@ var RecordResolver = (function () {
     return {
       sys_id: gr.getUniqueValue(),
       name: gr.getValue('name') || '',
-      class: gr.getValue('sys_class_name') || '',
+      'class': gr.getValue('sys_class_name') || '',
       operational_status: gr.getValue('operational_status') || '',
       install_status: gr.getValue('install_status') || '',
       support_group: gr.getValue('support_group') || '',

@@ -26,13 +26,15 @@
   }
 
   try {
-    var raw = '';
-    if (typeof request.body === 'string') {
-      raw = request.body;
-    } else if (request.body && request.body.data) {
-      raw = request.body.data;
-    }
-    var body = raw ? JSON.parse(raw) : { skills: [] };
+    var body = (function readJsonBody(request) {
+      var b = request.body;
+      if (b == null) { return {}; }
+      if (typeof b === 'string') { return b ? JSON.parse(b) : {}; }
+      var data = b.data;
+      if (typeof data === 'string') { return data ? JSON.parse(data) : {}; }
+      if (data && typeof data === 'object') { return data; }
+      return typeof b === 'object' ? b : {};
+    })(request);
     var skills = body.skills || [];
     var imported = 0;
     var failed = [];

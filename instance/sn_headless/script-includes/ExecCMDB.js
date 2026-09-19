@@ -76,7 +76,7 @@ function _ciHeaderCoin(rec) {
   return {
     sys_id: _gv(rec, 'sys_id'),
     name: _gv(rec, 'name'),
-    class: _gv(rec, 'sys_class_name'),
+    'class': _gv(rec, 'sys_class_name'),
     operational_status: _dv(rec, 'operational_status'),
     install_status: _dv(rec, 'install_status'),
     support_group: _dv(rec, 'support_group') || _gv(rec, 'support_group'),
@@ -194,7 +194,7 @@ ExecCMDB.prototype._walkRelations = function (startSysId, depth) {
     var cls = _gv(gr, 'sys_class_name');
     var lastDisc = _gv(gr, 'last_discovered');
     var stale = lastDisc !== '' && _stamp(ctx).slice(0, 10) > lastDisc.slice(0, 10);
-    nodes.push({ sys_id: cur.sys_id, name: label, class: cls, depth: cur.depth, stale: stale, type: '' });
+    nodes.push({ sys_id: cur.sys_id, name: label, 'class': cls, depth: cur.depth, stale: stale, type: '' });
     if (cur.depth >= depth) { continue; }
     var rel = _newGR('cmdb_rel_ci');
     rel.addQuery('parent', cur.sys_id);
@@ -256,7 +256,7 @@ ExecCMDB.prototype.plan_ci_blast_radius = function (ctx, inputs) {
   var byClass = {};
   var i;
   for (i = 0; i < nodes.length; i++) {
-    var cls = nodes[i].class || 'unknown';
+    var cls = nodes[i]['class'] || 'unknown';
     byClass[cls] = (byClass[cls] || 0) + 1;
   }
   var stale = [];
@@ -265,7 +265,7 @@ ExecCMDB.prototype.plan_ci_blast_radius = function (ctx, inputs) {
   }
 
   var payload = {
-    root: { sys_id: rootSysId, name: root.name || term, class: root.class || '' },
+    root: { sys_id: rootSysId, name: root.name || term, 'class': root['class'] || '' },
     depth: depth,
     node_count: nodes.length,
     nodes: _cap(nodes, 50),
@@ -364,7 +364,7 @@ ExecCMDB.prototype.plan_service_health = function (ctx, inputs) {
 
   return {
     focusedPayload: {
-      service: { sys_id: svcSysId, name: svc.name || term, class: svc.class || '' },
+      service: { sys_id: svcSysId, name: svc.name || term, 'class': svc['class'] || '' },
       status: status,
       open_p1_p2: openP1P2,
       open_alerts: openAlerts,

@@ -376,6 +376,7 @@ export function installShim(opts: ShimOptions = {}): ShimState {
       hasRole: (r: string) => user.roles.includes(r),
     }),
     getUserID: () => user.sys_id,
+    generateGUID: () => `guid_${counter++}`,
     getDateTimeStr: () => new Date().toISOString(),
     hasRole: (r: string) => user.roles.includes(r),
     getProperty: (_k: string, d?: string) => d,

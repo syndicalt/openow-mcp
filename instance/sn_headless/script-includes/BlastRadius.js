@@ -18,7 +18,7 @@ var BlastRadius = (function () {
     if (depth > MAX_DEPTH) { depth = MAX_DEPTH; }
     var seen = {};
     var nodes = [];
-    var queue = [{ sys_id: startSysId, depth: 0, class: '' }];
+    var queue = [{ sys_id: startSysId, depth: 0, 'class': '' }];
     var staleCutoff = this.staleCutoff();
 
     while (queue.length > 0 && nodes.length < NODE_CAP) {
@@ -27,12 +27,12 @@ var BlastRadius = (function () {
       seen[cur.sys_id] = true;
       var rec = this.loadCi(cur.sys_id);
       if (!rec) { continue; }
-      var isService = this.isServiceClass(rec.class);
+      var isService = this.isServiceClass(rec['class']);
       var stale = rec.last_discovered !== '' && rec.last_discovered < staleCutoff;
       nodes.push({
         sys_id: cur.sys_id,
         name: rec.name,
-        class: rec.class,
+        'class': rec['class'],
         depth: cur.depth,
         stale: stale,
         type: rec.type
@@ -41,7 +41,7 @@ var BlastRadius = (function () {
       var nextDepth = cur.depth + 1;
       var rels = this.relations(cur.sys_id);
       for (var i = 0; i < rels.length; i++) {
-        queue.push({ sys_id: rels[i], depth: nextDepth, class: '' });
+        queue.push({ sys_id: rels[i], depth: nextDepth, 'class': '' });
       }
       // application services get one extra hop
       if (isService && cur.depth === depth - 1) {
@@ -61,7 +61,7 @@ var BlastRadius = (function () {
       return {
         sys_id: sysId,
         name: gr.getValue('name') || '',
-        class: gr.getValue('sys_class_name') || '',
+        'class': gr.getValue('sys_class_name') || '',
         last_discovered: gr.getValue('last_discovered') || '',
         type: ''
       };

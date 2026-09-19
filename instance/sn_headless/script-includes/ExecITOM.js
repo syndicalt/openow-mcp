@@ -129,7 +129,7 @@ function _findCi(ctx, term) {
     gr.query();
     while (gr.next()) {
       out.candidates.push({
-        sys_id: _gv(gr, 'sys_id'), name: _gv(gr, 'name'), class: _gv(gr, 'sys_class_name'),
+        sys_id: _gv(gr, 'sys_id'), name: _gv(gr, 'name'), 'class': _gv(gr, 'sys_class_name'),
         support_group: _dv(gr, 'support_group')
       });
     }

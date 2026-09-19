@@ -21,6 +21,21 @@ const hasToken = Boolean(process.env.SNOW_ACCESS_TOKEN ?? process.env.OPEN_NOW_A
 const run = Boolean(instance && (hasBasic || hasToken));
 const jevKey = process.env.TYPESAFE_API_KEY;
 
+async function firstIncidentNumber(): Promise<string | undefined> {
+  const base = String(instance ?? "").replace(/\/$/, "");
+  const user = process.env.SNOW_USER;
+  const password = process.env.SNOW_PASSWORD;
+  if (!base || !user || !password) return undefined;
+  const auth = `Basic ${Buffer.from(`${user}:${password}`).toString("base64")}`;
+  const res = await fetch(
+    `${base}/api/now/table/incident?sysparm_limit=1&sysparm_query=active=true&sysparm_fields=number`,
+    { headers: { Authorization: auth, Accept: "application/json" } },
+  );
+  if (!res.ok) return undefined;
+  const json = (await res.json()) as { result?: Array<{ number?: string }> };
+  return json.result?.[0]?.number;
+}
+
 describe.skipIf(!run)("PDI kernel + judgment", () => {
   const gateway = new InstanceGateway({
     baseUrl: String(instance ?? "").replace(/\/$/, ""),
@@ -50,6 +65,8 @@ describe.skipIf(!run)("PDI kernel + judgment", () => {
   }, 30_000);
 
   test("pending write is annotated and never auto-applied", async () => {
+    const number = await firstIncidentNumber();
+    expect(number).toBeTruthy();
     const kernel = createKernel(gateway, {
       clientApp: "pdi-judgment",
       judgment: new LocalJudgmentClient(),
@@ -60,7 +77,11 @@ describe.skipIf(!run)("PDI kernel + judgment", () => {
       "dispatch",
       {
         skillId: "sn.itsm.incident.update",
-        inputs: { mode: "work_note", body: "judgment-plane live test — do not apply" },
+        inputs: {
+          incident_number: number,
+          mode: "work_note",
+          body: "judgment-plane live test — do not apply",
+        },
         requestId: `pdi-j-${Date.now()}`,
       },
       session,

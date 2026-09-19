@@ -4,15 +4,18 @@
     resp.setContentType('application/json');
     resp.setBody(JSON.stringify(body));
   }
+  function readJsonBody(request) {
+    var b = request.body;
+    if (b == null) { return {}; }
+    if (typeof b === 'string') { return b ? JSON.parse(b) : {}; }
+    var data = b.data;
+    if (typeof data === 'string') { return data ? JSON.parse(data) : {}; }
+    if (data && typeof data === 'object') { return data; }
+    return typeof b === 'object' ? b : {};
+  }
 
   try {
-    var raw = '';
-    if (typeof request.body === 'string') {
-      raw = request.body;
-    } else if (request.body && request.body.data) {
-      raw = request.body.data;
-    }
-    var body = raw ? JSON.parse(raw) : {};
+    var body = readJsonBody(request);
     var req = {
       op: body.op || '',
       args: body.args || {},

@@ -7,6 +7,18 @@ var SkillRuntime = (function () {
    */
   function SkillRuntime() {}
 
+  function newSysId() {
+    try {
+      if (typeof gs !== 'undefined' && typeof gs.generateGUID === 'function') {
+        return gs.generateGUID();
+      }
+    } catch (eG) {}
+    try {
+      if (typeof GlideSysId !== 'undefined') { return new GlideSysId().getSysId(); }
+    } catch (eS) {}
+    return String(new Date().getTime()) + '-' + Math.floor(Math.random() * 1e9);
+  }
+
   var RAW_TABLES = ['incident', 'problem', 'change_request', 'cmdb_ci', 'kb_knowledge', 'hr_case', 'sn_si_incident'];
   var EXEC_DOMAINS = {
     'itsm': 'ExecITSM', 'itom': 'ExecITOM', 'cmdb': 'ExecCMDB', 'spm': 'ExecSPM',
@@ -19,7 +31,7 @@ var SkillRuntime = (function () {
     requestObj = requestObj || {};
     var audit = new Audit();
     var gate = new ConfirmGate();
-    var reqId = requestObj.requestId || ('req:' + new GlideSysId().getSysId());
+    var reqId = requestObj.requestId || ('req:' + newSysId());
     var storedRun = requestObj.requestId ? audit.findByRequestId(reqId) : null;
     var replay = storedRun && storedRun.outcome !== 'pending' ? gate.replay(storedRun) : null;
     if (replay) {
@@ -188,7 +200,7 @@ var SkillRuntime = (function () {
   SkillRuntime.prototype.finish = function (audit, requestObj, started, outcome, payload, doc) {
     var ms = new Date().getTime() - started;
     var run = {
-      requestId: requestObj.requestId || ('req:' + new GlideSysId().getSysId()),
+      requestId: requestObj.requestId || ('req:' + newSysId()),
       skillId: requestObj.skillId || '',
       skillVersion: doc ? doc.version : '',
       clientApp: requestObj.clientApp || '',
@@ -301,14 +313,20 @@ var SkillRuntime = (function () {
 
   SkillRuntime.prototype.execFor = function (doc) {
     var ref = doc.executable.ref || EXEC_DOMAINS[doc.id.split('.')[1]] || '';
+    if (!ref || !/^[A-Za-z_][A-Za-z0-9_]*$/.test(ref)) { return null; }
+    try {
+      if (typeof gs !== 'undefined' && gs.include) { gs.include(ref); }
+    } catch (eInc) { /* already loaded or missing */ }
     var cls = null;
     try {
-      cls = (typeof globalThis !== 'undefined') ? globalThis[ref] : null;
-    } catch (e) {
-      cls = null;
+      if (typeof globalThis !== 'undefined' && globalThis[ref]) { cls = globalThis[ref]; }
+    } catch (eG) { cls = null; }
+    if (!cls) {
+      try {
+        cls = new Function('return (typeof ' + ref + ' === "function") ? ' + ref + ' : null;')();
+      } catch (eF) { cls = null; }
     }
-    if (!cls && typeof window !== 'undefined') { cls = window[ref]; }
-    if (!cls) { return null; }
+    if (typeof cls !== 'function') { return null; }
     return new cls();
   };
 
@@ -346,8 +364,8 @@ var SkillRuntime = (function () {
       var s = spec[name];
       var v = values[name];
       if (v === undefined || v === null || v === '') {
-        if (s.default !== undefined && s.default !== null) {
-          values[name] = s.default;
+        if (s['default'] !== undefined && s['default'] !== null) {
+          values[name] = s['default'];
           continue;
         }
         if (s.required) { missing.push(name); }
@@ -371,7 +389,7 @@ var SkillRuntime = (function () {
         if (typeof v !== 'boolean' && v !== 'true' && v !== 'false') { return name + ' must be a boolean'; }
         return null;
       case 'enum':
-        if (spec.enum && spec.enum.indexOf(String(v)) < 0) { return name + ' must be one of ' + spec.enum.join(', '); }
+        if (spec['enum'] && spec['enum'].indexOf(String(v)) < 0) { return name + ' must be one of ' + spec['enum'].join(', '); }
         return null;
       case 'array':
         if (!Array.isArray(v)) { return name + ' must be an array'; }
@@ -456,9 +474,17 @@ var SkillRuntime = (function () {
   SkillRuntime.prototype.hashInputs = function (inputs) {
     var canon = JSON.stringify(inputs);
     var h = 2166136261;
+    var imul = (typeof Math.imul === 'function') ? Math.imul : function (a, b) {
+      a = a | 0; b = b | 0;
+      var ah = (a >>> 16) & 0xffff;
+      var al = a & 0xffff;
+      var bh = (b >>> 16) & 0xffff;
+      var bl = b & 0xffff;
+      return (al * bl + (((ah * bl + al * bh) << 16) >>> 0) | 0);
+    };
     for (var i = 0; i < canon.length; i++) {
       h ^= canon.charCodeAt(i);
-      h = Math.imul(h, 16777619) >>> 0;
+      h = imul(h, 16777619) >>> 0;
     }
     var hex = h.toString(16);
     while (hex.length < 8) { hex = '0' + hex; }
