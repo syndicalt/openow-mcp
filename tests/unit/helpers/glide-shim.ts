@@ -9,6 +9,8 @@ export interface ShimUser {
   sys_id: string;
   name: string;
   roles: string[];
+  title?: string;
+  department?: string;
 }
 
 export interface ShimOptions {
@@ -46,7 +48,13 @@ export function installShim(opts: ShimOptions = {}): ShimState {
     );
   }
   let counter = 1;
-  const user: ShimUser = opts.user ?? { sys_id: "u_me", name: "Ada", roles: ["itil"] };
+  const user: ShimUser = opts.user ?? {
+    sys_id: "u_me",
+    name: "Ada",
+    roles: ["itil"],
+    title: "Service Desk Analyst",
+    department: "IT",
+  };
 
   const state: ShimState = {
     user,
@@ -374,6 +382,18 @@ export function installShim(opts: ShimOptions = {}): ShimState {
       getName: () => user.name,
       getRoles: () => [...user.roles],
       hasRole: (r: string) => user.roles.includes(r),
+      getRecord: () => ({
+        getValue: (f: string) => {
+          if (f === "title") return user.title ?? "";
+          if (f === "department") return user.department ?? "";
+          return "";
+        },
+        getDisplayValue: (f: string) => {
+          if (f === "title") return user.title ?? "";
+          if (f === "department") return user.department ?? "";
+          return "";
+        },
+      }),
     }),
     getUserID: () => user.sys_id,
     generateGUID: () => `guid_${counter++}`,

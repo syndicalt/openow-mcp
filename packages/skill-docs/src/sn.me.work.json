@@ -11,7 +11,8 @@
     "sysapproval_approver",
     "incident",
     "sc_req_item",
-    "change_request"
+    "change_request",
+    "sys_user"
   ],
   "tablesWritten": [],
   "rolesAnyOf": [],
@@ -19,6 +20,7 @@
   "confirmation": "read",
   "procedure": [
     "Lists: assigned to me (open), approvals pending where approver = me, watches, requested_for = me that are not closed.",
+    "Return identity (name, title, department, roles) from the invoking sys_user so NowOS can compile a title-aware canvas.",
     "Each line: number, type, short description, state, due.",
     "Cap 15 per list. Offer the matching domain skill as the next action."
   ],
@@ -27,7 +29,9 @@
     "assigned",
     "approvals",
     "watches",
-    "requested_for"
+    "requested_for",
+    "identity",
+    "next_skills"
   ],
   "relatedSkills": [],
   "executable": {

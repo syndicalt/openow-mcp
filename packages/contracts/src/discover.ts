@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DiscoverGateSchema } from "./judgment.js";
+import { SurfaceSpecSchema } from "./surface.js";
 
 export const DiscoverItemSchema = z.object({
   id: z.string(),
@@ -15,6 +16,8 @@ export type DiscoverItem = z.infer<typeof DiscoverItemSchema>;
 
 export const DiscoverResultSchema = z.object({
   results: z.array(DiscoverItemSchema).max(25),
+  /** Present when the kernel compiled a title-aware canvas for this operator. */
+  surface: SurfaceSpecSchema.optional(),
 });
 export type DiscoverResult = z.infer<typeof DiscoverResultSchema>;
 

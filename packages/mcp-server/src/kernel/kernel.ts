@@ -5,12 +5,15 @@ import type {
   InvokeRequest,
   InvokeResponse,
   RawRequest,
+  SurfaceSpec,
 } from "@open-now/contracts";
 import type { SnowGateway } from "../gateway/gateway.js";
 import type { JudgmentClient } from "../judgment/client.js";
 import type { Journal } from "../judgment/journal.js";
 import { rerankDiscover } from "../judgment/rank-discover.js";
 import { judgePending } from "../judgment/confirm-policy.js";
+import { compileSurface, identityFrom } from "../surface/compile.js";
+import type { OperatorIdentity } from "@open-now/contracts";
 
 export type KernelToolName =
   | "discover"
@@ -44,11 +47,13 @@ const RAW_PREFIX = "raw:";
  * All capability work is delegated to the gateway (in production the instance
  * runtime); this class owns protocol only.
  *
- * Judgment (Jev / local System One) is not a fifth tool. It reranks discover
- * and annotates pending diffs. It never writes.
+ * Judgment (Jev / local System One) is not a fifth tool. It reranks discover,
+ * annotates pending diffs, and compiles title-aware surfaces. It never writes.
  */
 export class Kernel {
   private readonly described = new Map<string, Set<string>>();
+  /** Last sn.me.work identity per session — canvases compile from title, not from a 5th tool. */
+  private readonly identityBySession = new Map<string, OperatorIdentity>();
 
   constructor(
     private readonly gateway: SnowGateway,
@@ -77,7 +82,7 @@ export class Kernel {
     try {
       switch (tool) {
         case "discover":
-          return await this.discover(args);
+          return await this.discover(args, ctx.sessionId);
         case "describe":
           return await this.describe(args, ctx.sessionId);
         case "dispatch_readonly":
@@ -90,7 +95,7 @@ export class Kernel {
     }
   }
 
-  private async discover(args: Record<string, unknown>): Promise<KernelResult> {
+  private async discover(args: Record<string, unknown>, sessionId: string): Promise<KernelResult> {
     const q = str(args.q) || str(args.query);
     const limit = clampInt(args.limit, 10, 1, 25);
     let result = await this.gateway.discover(q, limit);
@@ -101,6 +106,17 @@ export class Kernel {
         query: q,
         ids: result.results.map((r) => r.id),
       });
+    }
+    const identity = this.identityBySession.get(sessionId);
+    if (this.opts.judgment && identity) {
+      result = {
+        ...result,
+        surface: await compileSurface(this.opts.judgment, {
+          identity,
+          availableSkills: result.results.filter((r) => r.kind === "skill").map((r) => r.id),
+          intent: q,
+        }),
+      };
     }
     if (result.results.length === 0) {
       return {
@@ -187,10 +203,11 @@ export class Kernel {
     }
     if (res.outcome === "ok") {
       this.markDescribed(sessionId, skillId);
+      const data = await this.withSurface(sessionId, skillId, res);
       return {
         ok: true,
-        text: describePayload(res, `${skillId} (read)`),
-        data: res,
+        text: describePayload(data, `${skillId} (read)`),
+        data,
       };
     }
     return this.formatPreview(skillId, res, inputs);
@@ -250,7 +267,7 @@ export class Kernel {
     return {
       ok: true,
       text: `${res.message ?? skillId} — outcome ${res.outcome}`,
-      data: res,
+      data: await this.withSurface(sessionId, skillId, res),
     };
   }
 
@@ -346,6 +363,35 @@ export class Kernel {
 
     parts.push(`Call dispatch with confirm:true and the same requestId to apply.`);
     return { ok: true, text: parts.join("\n"), data: { ...res, judgment } };
+  }
+
+  /**
+   * Compile a title-aware canvas onto read outcomes. Identity is remembered
+   * per session from sn.me.work so later discover calls can tailor chrome.
+   * Skipped when judgment is off (eval goldens stay deterministic).
+   */
+  private async withSurface(
+    sessionId: string,
+    skillId: string,
+    res: InvokeResponse,
+  ): Promise<InvokeResponse & { surface?: SurfaceSpec }> {
+    const fromPayload = identityFrom(res.focusedPayload);
+    if (fromPayload) this.identityBySession.set(sessionId, fromPayload);
+    if (!this.opts.judgment) return res;
+    const identity = fromPayload ?? this.identityBySession.get(sessionId);
+    if (!identity) return res;
+    const surface = await compileSurface(this.opts.judgment, {
+      identity,
+      work: skillId === "sn.me.work" ? (res.focusedPayload as Record<string, unknown> | undefined) : undefined,
+      intent: skillId,
+    });
+    this.opts.journal?.append({
+      type: "jev.answered",
+      pack: "open-now.surface.classify",
+      model: "judgment",
+      answers: { archetype: surface.archetype, confidence: surface.confidence },
+    });
+    return { ...res, surface };
   }
 
   private markDescribed(sessionId: string, skillId: string): void {

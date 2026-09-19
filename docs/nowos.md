@@ -68,7 +68,9 @@ These survive every surface, every model, every "just this once":
 
 Not a ServiceNow skin. Not UI Builder. Not a portal.
 
-A surface is an **intent canvas**: a layout that compiles a `discover` result + `describe` contracts into the smallest honest UI for this user, this moment, this blast radius. Probabilistic form compilation — Jev scores which fields matter; the canvas hides the rest *only if the contract says they are optional and the ACL already hid them*.
+A surface is an **intent canvas**: a layout that compiles a `discover` result + `describe` contracts into the smallest honest UI for this user, this moment, this blast radius. The compiler reads `sys_user.title` (from `sn.me.work` identity). Jev **Choice** classifies the title into an archetype (`incident_desk`, `change_cab`, `executive`, …). Jev **Noul** judges each catalog component. The canvas hides the rest *only if* the component was optional *and* the ACL/role fence already hid it.
+
+See [`surface.md`](surface.md).
 
 First surfaces (build order, not vapor):
 
@@ -86,7 +88,7 @@ NowOS uses judgment to:
 
 - gate `discover` (`auto` / `pick` / `ask`)
 - annotate pending diffs (`refuse` / `confirm` / `auto_ok`)
-- compile surfaces (which contract fields to show)
+- compile surfaces from `sys_user.title` (Choice → archetype, Noul → components)
 
 It does not talk to the Table API. It does not hold a token.
 
@@ -124,7 +126,7 @@ If a design requires a service account, a shadow copy of `incident`, or a genera
 | 1. Judgment plane (Jev-shaped, default off) | PRs #2–#5 | in review |
 | 2. Live proof on a PDI + Jev account | PR #6 | gated tests; needs instance + key |
 | 3. NowOS thesis (this document) | this file | now |
-| 4. First surface: work canvas over `sn.me.work` | sibling / later package | not started |
+| 4. First surface: work canvas over `sn.me.work` | this repo — `compileSurface` | title → Jev Choice → component Noul |
 | 5. Wire Eventloom journal as the memory plane | zaxy + kernel journal | journal exists, not wired |
 | 6. Incident desk as the first *hated-form* replacement | surface | not started |
 

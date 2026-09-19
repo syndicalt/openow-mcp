@@ -4,6 +4,7 @@ import {
   ToolkitRequestSchema,
   ToolkitResponseSchema,
   SystemOneRequestSchema,
+  SurfaceSpecSchema,
   hashInputs,
   isToolkitWrite,
   isWriteClass,
@@ -147,5 +148,29 @@ describe("judgment contract", () => {
     });
     expect(req.model).toBe("jev-latest");
     expect(req.questions["skill"]?.type).toBe("choice");
+  });
+});
+
+describe("surface contract", () => {
+  test("parses a compiled canvas", () => {
+    const spec = SurfaceSpecSchema.parse({
+      archetype: "incident_desk",
+      confidence: 0.8,
+      density: 1.1,
+      identity: { userId: "u", name: "Ada", title: "Service Desk Analyst", roles: ["itil"] },
+      components: [
+        {
+          id: "header.identity",
+          kind: "identity",
+          region: "header",
+          title: "Operator",
+          noul: 1,
+          why: "identity chrome",
+        },
+      ],
+      skills: ["sn.me.work"],
+    });
+    expect(spec.archetype).toBe("incident_desk");
+    expect(spec.components[0]?.kind).toBe("identity");
   });
 });
