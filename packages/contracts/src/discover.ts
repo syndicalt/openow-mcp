@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DiscoverGateSchema } from "./judgment.js";
 
 export const DiscoverItemSchema = z.object({
   id: z.string(),
@@ -6,6 +7,9 @@ export const DiscoverItemSchema = z.object({
   score: z.number().nonnegative(),
   /** One-line reason the item matched. */
   why: z.string(),
+  /** Present when the kernel judgment plane reranked this result. */
+  confidence: z.number().min(0).max(1).optional(),
+  gate: DiscoverGateSchema.optional(),
 });
 export type DiscoverItem = z.infer<typeof DiscoverItemSchema>;
 

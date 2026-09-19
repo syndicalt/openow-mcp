@@ -3,6 +3,7 @@ import {
   SkillDocSchema,
   ToolkitRequestSchema,
   ToolkitResponseSchema,
+  SystemOneRequestSchema,
   hashInputs,
   isToolkitWrite,
   isWriteClass,
@@ -123,5 +124,28 @@ describe("toolkit contract", () => {
     });
     expect(res.outcome).toBe("pending");
     expect(res.diff?.[0]?.field).toBe("state");
+  });
+});
+
+describe("judgment contract", () => {
+  test("parses a mixed System One request", () => {
+    const req = SystemOneRequestSchema.parse({
+      state: { q: "smtp down" },
+      questions: {
+        skill: {
+          type: "choice",
+          instructions: "pick",
+          criteria: { a: "one", b: "two" },
+        },
+        urgent: { type: "noul", instructions: "Is this urgent?" },
+        severity: {
+          type: "score",
+          instructions: "severity",
+          criteria: ["low", "high"],
+        },
+      },
+    });
+    expect(req.model).toBe("jev-latest");
+    expect(req.questions["skill"]?.type).toBe("choice");
   });
 });
