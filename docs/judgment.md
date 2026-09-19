@@ -61,6 +61,7 @@ docs: data, not prompt soup.
 
 - `open-now.dispatch.confirm`
 - `open-now.itsm.incident.triage`
+- `open-now.surface.classify`
 
 ## What this is not
 

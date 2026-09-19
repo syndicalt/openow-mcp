@@ -41,6 +41,9 @@ describe.skipIf(!run)("instance integration smoke", () => {
       confirm: false,
     });
     expect(res.outcome).toBe("ok");
+    const identity = (res.focusedPayload as { identity?: { name?: string } } | undefined)?.identity;
+    expect(identity).toBeDefined();
+    expect(typeof identity?.name).toBe("string");
   });
 
   test("invoke on a role-gated HR skill never silently writes", async () => {

@@ -33,7 +33,7 @@ function skillRow(id: string, confirmation: string, executable: Record<string, s
 
 beforeAll(() => {
   state = installShim({
-    user: { sys_id: "u_me", name: "Ada", roles: ["itil"] },
+    user: { sys_id: "u_me", name: "Ada", roles: ["itil"], title: "Service Desk Analyst", department: "IT" },
     records: {
       incident: [
         {
@@ -98,6 +98,9 @@ describe("SkillRuntime end-to-end (shim)", () => {
     expect(res.outcome).toBe("ok");
     const payload = res.focusedPayload as Record<string, unknown>;
     expect(JSON.stringify(payload)).toContain("INC0010001");
+    const identity = payload.identity as { title?: string; name?: string };
+    expect(identity.title).toBe("Service Desk Analyst");
+    expect(identity.name).toBe("Ada");
     expect(state.updateLog.length).toBe(0);
     expect((res.auditId as string).length).toBeGreaterThan(0);
   });

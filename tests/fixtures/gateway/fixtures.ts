@@ -31,6 +31,13 @@ export function standardMockGateway(): MockGateway {
     },
     focused: {
       "sn.me.work": {
+        identity: {
+          user_id: "u_me",
+          name: "Ada",
+          title: "Service Desk Analyst",
+          department: "IT",
+          roles: ["itil"],
+        },
         assigned: [{ number: "INC0010001", short_description: "printer on fire" }],
         approvals: [],
         watches: [],

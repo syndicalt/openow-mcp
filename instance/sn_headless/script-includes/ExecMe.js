@@ -84,7 +84,20 @@ ExecMe.prototype.plan_work = function (ctx, inputs) {
   var a = _args(ctx, inputs);
   var c = a.ctx, inp = a.inputs;
   var me = _me(c);
-  var out = { assigned: [], approvals: [], watches: [], requested_for: [] };
+  var ident = (c.user && typeof c.user === 'object') ? c.user : {};
+  var out = {
+    identity: {
+      user_id: me,
+      name: ident.name || '',
+      title: ident.title || '',
+      department: ident.department || '',
+      roles: ident.roles || []
+    },
+    assigned: [],
+    approvals: [],
+    watches: [],
+    requested_for: []
+  };
   var numbers = [];
   var i;
 

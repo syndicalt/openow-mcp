@@ -12,3 +12,4 @@ export * from "./server/mcp.js";
 export * from "./server/http.js";
 export * from "./domains/domain.js";
 export * from "./judgment/index.js";
+export * from "./surface/index.js";

@@ -6,7 +6,7 @@ Open Now is a headless MCP interface for ServiceNow: a small, stable MCP kernel,
 
 We are building toward **[NowOS](docs/nowos.md)**: composable surfaces *outside* the ServiceNow UI, with this repo as the only mutation path.
 
-> Design spec: [`docs/spec.md`](docs/spec.md) · Wire contract: [`docs/wire-contract.md`](docs/wire-contract.md) · Implementation plan: [`docs/implementation-plan.md`](docs/implementation-plan.md) · Judgment plane: [`docs/judgment.md`](docs/judgment.md) · NowOS: [`docs/nowos.md`](docs/nowos.md)
+> Design spec: [`docs/spec.md`](docs/spec.md) · Wire contract: [`docs/wire-contract.md`](docs/wire-contract.md) · Implementation plan: [`docs/implementation-plan.md`](docs/implementation-plan.md) · Judgment plane: [`docs/judgment.md`](docs/judgment.md) · Surfaces: [`docs/surface.md`](docs/surface.md) · NowOS: [`docs/nowos.md`](docs/nowos.md)
 
 ---
 

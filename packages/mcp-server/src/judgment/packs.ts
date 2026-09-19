@@ -59,7 +59,46 @@ export const INCIDENT_TRIAGE_PACK: QuestionPack = {
   },
 };
 
+export const SURFACE_CLASSIFY_PACK: QuestionPack = {
+  id: "open-now.surface.classify",
+  version: "1.0.0",
+  questions: {
+    archetype: {
+      type: "choice",
+      instructions:
+        "Which NowOS work surface matches this operator given their ServiceNow title, department, and roles? Pick the one they would inhabit — not a ServiceNow workspace name.",
+      criteria: {
+        incident_desk:
+          "service desk incident analyst fulfiller itil helpdesk help desk technician support agent it support",
+        change_cab:
+          "change manager cab change advisory board release manager change analyst change coordinator",
+        cmdb_ops:
+          "cmdb sre site reliability service owner itom operations monitoring event management configuration manager",
+        hr_agent: "hr human resources people operations hr agent hrbp hr business partner",
+        csm_agent: "customer service csm account manager case agent customer success",
+        secops: "security soc vulnerability sir threat analyst infosec security operations",
+        spm: "project manager portfolio pmo program manager project coordinator",
+        builder:
+          "developer admin platform engineer servicenow system administrator app engine sn admin",
+        executive: "vp vice president director cio cto chief head of svp",
+        employee: "employee requester end user staff anyone knowledge worker no ITIL title",
+      },
+    },
+  },
+};
+
+export const SURFACE_DENSITY_QUESTION: Question = {
+  type: "score",
+  instructions: "How dense should this operator's NowOS canvas be given their title?",
+  criteria: [
+    "Sparse: 2–3 cards, executive or requester, no ticket mill",
+    "Working desk: one queue plus a handful of next actions",
+    "Command center: several queues, graphs, and live briefing strips",
+  ],
+};
+
 export const PACKS_BY_ID: Record<string, QuestionPack> = {
   [DISPATCH_CONFIRM_PACK.id]: DISPATCH_CONFIRM_PACK,
   [INCIDENT_TRIAGE_PACK.id]: INCIDENT_TRIAGE_PACK,
+  [SURFACE_CLASSIFY_PACK.id]: SURFACE_CLASSIFY_PACK,
 };
