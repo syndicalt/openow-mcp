@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { createKernel, InstanceGateway, MockGateway } from "@open-now/mcp-server";
+import { createKernel, InstanceGateway, instanceAuthFromEnv, MockGateway } from "@open-now/mcp-server";
 import type { Kernel, KernelToolName, MockGatewayOptions } from "@open-now/mcp-server";
 import type { SkillDoc } from "@open-now/contracts";
 
@@ -229,10 +229,17 @@ async function main(): Promise<void> {
   );
 
   const instance = process.env.SNOW_INSTANCE;
+  const hasBasic = Boolean(process.env.SNOW_USER && process.env.SNOW_PASSWORD);
   const token = process.env.SNOW_ACCESS_TOKEN ?? process.env.OPEN_NOW_ACCESS_TOKEN;
   if (opts.gateway === "instance" && !instance) {
     console.error(
-      "--gateway instance requires SNOW_INSTANCE (and SNOW_ACCESS_TOKEN or OPEN_NOW_ACCESS_TOKEN)",
+      "--gateway instance requires SNOW_INSTANCE (and SNOW_USER+SNOW_PASSWORD or SNOW_ACCESS_TOKEN)",
+    );
+    process.exit(1);
+  }
+  if (opts.gateway === "instance" && !hasBasic && !token) {
+    console.error(
+      "--gateway instance requires SNOW_USER+SNOW_PASSWORD or SNOW_ACCESS_TOKEN",
     );
     process.exit(1);
   }
@@ -246,7 +253,7 @@ async function main(): Promise<void> {
         ? new MockGateway(buildMockFixtureConfig())
         : new InstanceGateway({
             baseUrl: instance!,
-            tokenProvider: async () => token ?? null,
+            ...instanceAuthFromEnv(),
           });
     const kernel = createKernel(gateway);
 

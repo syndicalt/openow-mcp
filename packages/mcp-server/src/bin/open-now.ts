@@ -2,7 +2,7 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { allSkillDocs } from "@open-now/skill-docs";
 import { loadConfig } from "../config.js";
-import { InstanceGateway } from "../gateway/instance.js";
+import { InstanceGateway, instanceAuthFromEnv } from "../gateway/instance.js";
 import { createKernel } from "../kernel/kernel.js";
 import { kernelOptsFromConfig } from "../judgment/from-config.js";
 import { SessionStore } from "../auth/session-store.js";
@@ -53,11 +53,9 @@ export async function main(): Promise<number> {
     return 0;
   }
 
-  const staticToken =
-    process.env.OPEN_NOW_ACCESS_TOKEN ?? process.env.SNOW_ACCESS_TOKEN;
   const gateway = new InstanceGateway({
     baseUrl: config.instanceUrl,
-    tokenProvider: staticToken ? async () => staticToken : undefined,
+    ...instanceAuthFromEnv(),
   });
   const kernel = createKernel(gateway, kernelOptsFromConfig(config, "open-now-stdio"));
   const server = createMcpServer({

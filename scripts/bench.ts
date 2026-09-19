@@ -1,4 +1,4 @@
-import { createKernel, InstanceGateway, MockGateway } from "@open-now/mcp-server";
+import { createKernel, InstanceGateway, instanceAuthFromEnv, MockGateway } from "@open-now/mcp-server";
 import type { KernelToolName } from "@open-now/mcp-server";
 import { buildMockFixtureConfig } from "./eval-runner";
 
@@ -54,20 +54,19 @@ async function main(): Promise<void> {
   const { skills, gateway: mode } = parseArgs(process.argv.slice(2));
 
   const instance = process.env.SNOW_INSTANCE;
-  const token = process.env.SNOW_ACCESS_TOKEN ?? process.env.OPEN_NOW_ACCESS_TOKEN;
 
   const gateway =
     mode === "instance"
       ? (() => {
           if (!instance) {
             console.error(
-              "--gateway instance requires SNOW_INSTANCE (and SNOW_ACCESS_TOKEN or OPEN_NOW_ACCESS_TOKEN)",
+              "--gateway instance requires SNOW_INSTANCE (and SNOW_USER+SNOW_PASSWORD or SNOW_ACCESS_TOKEN)",
             );
             process.exit(1);
           }
           return new InstanceGateway({
             baseUrl: instance,
-            tokenProvider: async () => token ?? null,
+            ...instanceAuthFromEnv(),
           });
         })()
       : new MockGateway(buildMockFixtureConfig());
