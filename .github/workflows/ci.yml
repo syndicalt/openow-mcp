@@ -28,6 +28,7 @@ jobs:
     env:
       SNOW_INSTANCE: ${{ secrets.SNOW_INSTANCE }}
       SNOW_ACCESS_TOKEN: ${{ secrets.SNOW_ACCESS_TOKEN }}
+      TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -36,9 +37,6 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run build:app
       - run: bun test tests/integration
-        if: "env.SNOW_INSTANCE != ''"
-      - run: "echo 'integration skipped: no instance'"
-        if: "env.SNOW_INSTANCE == ''"
       - run: bun run eval -- --gateway instance
         if: "env.SNOW_INSTANCE != ''"
       - uses: actions/upload-artifact@v4
