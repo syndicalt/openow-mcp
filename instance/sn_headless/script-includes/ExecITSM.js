@@ -447,7 +447,7 @@ function _findCi(ctx, term) {
     gr.query();
     while (gr.next()) {
       out.candidates.push({
-        sys_id: _gv(gr, 'sys_id'), name: _gv(gr, 'name'), class: _gv(gr, 'sys_class_name'),
+        sys_id: _gv(gr, 'sys_id'), name: _gv(gr, 'name'), 'class': _gv(gr, 'sys_class_name'),
         operational_status: _dv(gr, 'operational_status'), support_group: _dv(gr, 'support_group')
       });
     }
@@ -490,7 +490,7 @@ ExecITSM.prototype.plan_incident_triage = function (ctx, inputs) {
 
   var category = _gv(rec, 'category');
   if (!category && chosenCi) {
-    category = _inferCategory((f && f.match && f.match.class) ? f.match.class : '');
+    category = _inferCategory((f && f.match && f.match['class']) ? f.match['class'] : '');
     /* keep empty -> propose nothing unless we can infer */
   }
   var supportGroup = (f && f.match && f.match.support_group) ? f.match.support_group : '';

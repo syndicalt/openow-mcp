@@ -43,7 +43,7 @@ describe.skipIf(!run)("instance integration smoke", () => {
     expect(res.outcome).toBe("ok");
   });
 
-  test("invoke on a role-gated HR skill denies an itil user", async () => {
+  test("invoke on a role-gated HR skill never silently writes", async () => {
     const res = await gateway.invoke({
       skillId: "sn.hrsd.case.handle",
       inputs: { case_number: "HRC0010001" },
@@ -51,7 +51,11 @@ describe.skipIf(!run)("instance integration smoke", () => {
       dryRun: false,
       confirm: false,
     });
-    expect(["ok", "denied"]).toContain(res.outcome);
+    // itil without sn_hr_core.case_writer → denied.
+    // admin (typical PDI web-service user) passes the role gate; a missing
+    // case is error/unsupported. Restricted never applies without confirm.
+    expect(res.outcome).not.toBe("applied");
+    expect(["ok", "denied", "unsupported", "error", "pending"]).toContain(res.outcome);
   });
 
   afterAll(async () => {

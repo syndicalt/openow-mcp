@@ -52,6 +52,14 @@ SNOW_USER=admin SNOW_PASSWORD='<your password>' \
 bash scripts/export-update-set.sh
 ```
 
+Web-service-only admins cannot hit `xmlimport.do` (it is a UI page). Use the REST installer instead — it creates `u_sn_headless_*` tables, public script includes, and the Scripted REST API at `/api/now/sn_headless`:
+
+```bash
+SNOW_INSTANCE=https://dev123456.service-now.com \
+SNOW_USER=opennow-mcp SNOW_PASSWORD='<password>' \
+bun run install:instance
+```
+
 ## 4. Register the OAuth application
 
 The kernel authenticates as the user via OAuth 2.0 Authorization Code + PKCE
@@ -90,10 +98,10 @@ export SNOW_ACCESS_TOKEN='<access token>'
 
 | Variable | Purpose | Used by |
 |----------|---------|---------|
-| `SNOW_INSTANCE` | instance base URL (no trailing slash) | seed, eval `--gateway instance`, bench, export script |
+| `SNOW_INSTANCE` | instance base URL (no trailing slash) | seed, eval `--gateway instance`, bench, export script, `install:instance` |
 | `SNOW_ACCESS_TOKEN` | OAuth bearer token | seed, eval, bench |
 | `OPEN_NOW_ACCESS_TOKEN` | fallback token name | seed, eval, bench (stdio mode) |
-| `SNOW_USER` / `SNOW_PASSWORD` | admin basic auth | `scripts/export-update-set.sh` (curl xmlimport) |
+| `SNOW_USER` / `SNOW_PASSWORD` | admin basic auth | `bun run install:instance`, `scripts/export-update-set.sh`, eval `--gateway instance` |
 
 ## 6. Seed the skill registry
 

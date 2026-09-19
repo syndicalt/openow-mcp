@@ -9,6 +9,7 @@
     "test": "bun test tests/unit",
     "test:integration": "bun test tests/integration",
     "build:app": "bun run scripts/build-app.ts",
+    "install:instance": "bun run scripts/install-instance.ts",
     "seed": "bun run scripts/seed-instance.ts",
     "eval": "bun run scripts/eval-runner.ts",
     "bench": "bun run scripts/bench.ts"

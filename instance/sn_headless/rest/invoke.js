@@ -1,25 +1,38 @@
 (function process(request, response) {
   function pathParam(req, key) {
     var ps = req.pathParams;
-    if (ps && ps.get) { return ps.get(key); }
-    if (ps && typeof ps === 'object') { return ps[key]; }
-    return ps && ps[key] ? ps[key] : '';
+    if (!ps) { return ''; }
+    var v;
+    try {
+      if (typeof ps.get === 'function') { v = ps.get(key); }
+    } catch (e) { v = undefined; }
+    if (v === undefined || v === null) {
+      try { v = ps[key]; } catch (e2) { v = undefined; }
+    }
+    if (v && typeof v.size === 'number' && typeof v.get === 'function') {
+      v = v.size() > 0 ? v.get(0) : '';
+    }
+    if (Object.prototype.toString.call(v) === '[object Array]') { v = v[0]; }
+    if (v === undefined || v === null) { return ''; }
+    return String(v);
   }
   function jsonOut(resp, status, body) {
     resp.setStatus(status);
     resp.setContentType('application/json');
     resp.setBody(JSON.stringify(body));
   }
+  function readJsonBody(request) {
+    var b = request.body;
+    if (b == null) { return {}; }
+    if (typeof b === 'string') { return b ? JSON.parse(b) : {}; }
+    var data = b.data;
+    if (typeof data === 'string') { return data ? JSON.parse(data) : {}; }
+    if (data && typeof data === 'object') { return data; }
+    return typeof b === 'object' ? b : {};
+  }
 
   try {
-    var raw = '';
-    if (typeof request.body === 'string') {
-      raw = request.body;
-    } else if (request.body && request.body.data) {
-      raw = request.body.data;
-    }
-    var body = {};
-    if (raw && raw.length > 0) { body = JSON.parse(raw); }
+    var body = readJsonBody(request);
     var req = {
       skillId: body.skillId || pathParam(request, 'skillId'),
       inputs: body.inputs || {},

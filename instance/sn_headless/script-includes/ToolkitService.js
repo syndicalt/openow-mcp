@@ -12,6 +12,18 @@ var ToolkitService = (function () {
    */
   function ToolkitService() {}
 
+  function newSysId() {
+    try {
+      if (typeof gs !== 'undefined' && typeof gs.generateGUID === 'function') {
+        return gs.generateGUID();
+      }
+    } catch (eG) {}
+    try {
+      if (typeof GlideSysId !== 'undefined') { return new GlideSysId().getSysId(); }
+    } catch (eS) {}
+    return String(new Date().getTime()) + '-' + Math.floor(Math.random() * 1e9);
+  }
+
   var WRITE_CONFIRMATION = {
     record_create: 'create',
     record_update: 'update_shared',
@@ -23,7 +35,7 @@ var ToolkitService = (function () {
     reqObj = reqObj || {};
     var audit = new Audit();
     var gate = new ConfirmGate();
-    var reqId = reqObj.requestId || ('tk:' + new GlideSysId().getSysId());
+    var reqId = reqObj.requestId || ('tk:' + newSysId());
     var stored = reqObj.requestId ? audit.findByRequestId(reqId) : null;
     var replay = stored && stored.outcome !== 'pending' ? gate.replay(stored) : null;
     if (replay) {
