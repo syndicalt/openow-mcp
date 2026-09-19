@@ -1,7 +1,7 @@
 # Judgment plane (System One)
 
 The kernel is protocol. ServiceNow is the system of action. This document is
-the **judgment plane**: typed, calibrated decisions that software can branch
+the **judgment plane** of [NowOS](nowos.md): typed, calibrated decisions that software can branch
 on, without adding a fifth MCP tool and without a service account.
 
 **Invariant:** Jev (or the local engine) never writes. The only mutation path
