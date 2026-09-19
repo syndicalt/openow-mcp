@@ -4,7 +4,7 @@ Open Now is a headless MCP interface for ServiceNow: a small, stable MCP kernel,
 
 **The invariant:** the AI client orchestrates; ServiceNow remains the governed system of action. The kernel is protocol only — all capability, permission, and audit logic runs in the instance as the invoking user. No Table API in the kernel, no service account on the interactive path.
 
-> Design spec: [`docs/spec.md`](docs/spec.md) · Wire contract: [`docs/wire-contract.md`](docs/wire-contract.md) · Implementation plan: [`docs/implementation-plan.md`](docs/implementation-plan.md)
+> Design spec: [`docs/spec.md`](docs/spec.md) · Wire contract: [`docs/wire-contract.md`](docs/wire-contract.md) · Implementation plan: [`docs/implementation-plan.md`](docs/implementation-plan.md) · Judgment plane: [`docs/judgment.md`](docs/judgment.md)
 
 ---
 
@@ -17,6 +17,7 @@ flowchart LR
     end
     subgraph Kernel["open-now mcp-server (Bun/TS)"]
         T[4 stable kernel tools + toolkit + confirm policy + OAuth PKCE session]
+        J[System One judgment — Jev or local, never writes]
     end
     subgraph Instance["ServiceNow instance"]
         REST[Scripted REST sn_headless]
@@ -31,7 +32,7 @@ Three components, one contract (`packages/contracts`):
 
 | Component | Path | What it owns |
 |---|---|---|
-| MCP kernel | `packages/mcp-server` | The four tools, confirmation protocol, OAuth/PKCE, sessions, domain modes |
+| MCP kernel | `packages/mcp-server` | The four tools, confirmation protocol, OAuth/PKCE, sessions, domain modes, internal System One judgment |
 | Instance runtime | `instance/sn_headless` | Skill registry, audit, discover index, query guard, planners/appliers (scoped app update set) |
 | Skill catalog | `packages/skill-docs` | 32 validated skill documents (the contract source of truth; seeded into the registry) |
 
@@ -183,6 +184,9 @@ All settings via environment (defaults in parentheses) or `--config file.json` (
 | `OPEN_NOW_ENABLED_SKILLS` | Comma-separated allowlist |
 | `OPEN_NOW_TOOLKIT` | Generated wide surface: `generic` (default) \| `table` \| `off` |
 | `OPEN_NOW_TABLE_TOOLS` | Comma-separated table allowlist for table mode (empty = none; unset = core allowlist) |
+| `OPEN_NOW_JUDGMENT` | Internal System One: `off` (default) \| `local` \| `jev` — see [`docs/judgment.md`](docs/judgment.md) |
+| `TYPESAFE_API_KEY` | Jev API key when `OPEN_NOW_JUDGMENT=jev` (never sent to ServiceNow) |
+| `OPEN_NOW_JOURNAL_PATH` | Append-only JSONL of `jev.answered` / `skill.discovered` / `dispatch.*` |
 
 **Pause switch:** each registry row has an `active` flag — a single flip pauses a skill sans deploy.
 
@@ -227,7 +231,7 @@ open-now/
 ├── packages/
 │   ├── contracts/                  # zod schemas + types (single source for both sides)
 │   ├── skill-docs/                 # 32 skill documents (catalog source of truth)
-│   ├── mcp-server/                 # kernel, gateways, auth, domain modes, CLI
+│   ├── mcp-server/                 # kernel, gateways, auth, domain modes, CLI, judgment
 │   └── client-lib/                 # typed client helpers for MCP hosts
 ├── instance/
 │   ├── sn_headless/                # scoped app: app.json, script-includes/, rest/
